@@ -1,0 +1,21 @@
+version: '2'
+
+vars:
+  GO_PROTO_BUILD_DIR: lib/messages
+
+tasks:
+  build:
+    cmds:
+      - go build -v cmd/ingest/main.go
+    deps:
+      - proto
+
+  proto:
+    sources:
+      - proto/**/*.proto
+    method: checksum
+    cmds:
+      - rm -rf {{.GO_PROTO_BUILD_DIR}}
+      - mkdir -p {{.GO_PROTO_BUILD_DIR}}
+      - docker run --rm -v ${PWD}:/defs namely/protoc-all -d proto -l go -o {{.GO_PROTO_BUILD_DIR}} || (rm -rf {{.GO_PROTO_BUILD_DIR}} && exit 1)
+
