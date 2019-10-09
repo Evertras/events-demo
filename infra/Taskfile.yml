@@ -1,0 +1,10 @@
+version: '2'
+
+tasks:
+  install-local-kafka:
+    cmds:
+      - helm install --name events-demo-kafka ./cp-helm-charts -f ./local/kafka/cp-helm-config.yaml
+
+  delete-local-kafka:
+    cmds:
+      - helm delete --purge events-demo-kafka

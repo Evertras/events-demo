@@ -5,6 +5,9 @@
 *.so
 *.dylib
 
+# Telepresence likes logging in-directory...
+telepresence.log
+
 # Test binary, build with `go test -c`
 *.test
 

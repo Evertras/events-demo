@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"log"
-	"net"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/evertras/events-demo/ingest/lib/messages"
-	"google.golang.org/grpc"
+	kafka "github.com/segmentio/kafka-go"
 )
 
 type server struct {
@@ -20,18 +23,154 @@ func (s *server) Echo(ctx context.Context, in *messages.EchoRequest) (*messages.
 	}, nil
 }
 
+const deployName = "events-demo-kafka"
+const kafkaService = deployName + "-cp-kafka:9092"
+const zookeeperService = deployName + "-cp-zookeeper:2181"
+const topic = "ingest"
+
+var brokers = []string{kafkaService}
+
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		ticker := time.NewTicker(time.Millisecond * 100)
+
+		for {
+			select {
+			case <-ticker.C:
+				err := writeMessages()
+
+				if err != nil {
+					log.Fatal(err)
+				}
+
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	/*
+	go func() {
+		if err := listenForMessages(ctx); err != nil {
+			log.Fatal("Failed to listen: ", err)
+		}
+	}()
+	*/
+
+	go func() {
+		<-sigchan
+
+		log.Println("Got signal to interrupt, exiting...")
+
+		cancel()
+	}()
+
+	<-ctx.Done()
+}
+
+func writeMessages() error {
+	w := kafka.NewWriter(kafka.WriterConfig{
+		Brokers:  brokers,
+		Topic:    topic,
+		Balancer: &kafka.LeastBytes{},
+	})
+
+	err := w.WriteMessages(context.Background(),
+		kafka.Message{
+			Key:   []byte("key-a"),
+			Value: []byte("Hello"),
+		},
+		kafka.Message{
+			Key:   []byte("key-b"),
+			Value: []byte("Hello"),
+		},
+		kafka.Message{
+			Key:   []byte("key-c"),
+			Value: []byte("Hello"),
+		},
+		kafka.Message{
+			Key:   []byte("key-d"),
+			Value: []byte("Hello"),
+		},
+		kafka.Message{
+			Key:   []byte("key-e"),
+			Value: []byte("Hello"),
+		},
+		kafka.Message{
+			Key:   []byte("key-f"),
+			Value: []byte("Hello"),
+		},
+		kafka.Message{
+			Key:   []byte("key-g"),
+			Value: []byte("Hello"),
+		},
+		kafka.Message{
+			Key:   []byte("key-h"),
+			Value: []byte("Hello"),
+		},
+		kafka.Message{
+			Key:   []byte("key-i"),
+			Value: []byte("Hello"),
+		},
+		kafka.Message{
+			Key:   []byte("key-j"),
+			Value: []byte("Hello"),
+		},
+	)
 
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return err
 	}
 
-	s := grpc.NewServer()
+	err = w.Close()
 
-	messages.RegisterEchoServer(s, &server{})
+	if err != nil {
+		return err
+	}
 
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	return nil
+}
+
+func listenForMessages(ctx context.Context) error {
+	r := kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{kafkaService},
+		GroupID: "abc",
+		Topic:   topic,
+		MaxWait: time.Second,
+	})
+
+	defer r.Close()
+
+	log.Println("Reading...")
+
+	go func() {
+		ticker := time.NewTicker(time.Second)
+
+		for {
+			select {
+			case <-ticker.C:
+				_ = r.Stats()
+
+				//log.Printf("%+v", s)
+
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	for {
+		m, err := r.ReadMessage(ctx)
+
+		if err != nil {
+			return err
+		}
+
+		log.Printf("%d - %q %q", m.Offset, string(m.Value), m.Key)
 	}
 }

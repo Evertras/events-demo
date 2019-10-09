@@ -4,6 +4,10 @@ vars:
   GO_PROTO_BUILD_DIR: lib/messages
 
 tasks:
+  dev:
+    cmds:
+      - telepresence --docker-run --rm -it -v ${PWD}:/usr/local/ingest -w /usr/local/ingest golang:1.13 /bin/bash
+
   build:
     cmds:
       - go build -v cmd/ingest/main.go

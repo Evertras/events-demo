@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kafka-control-center-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: kafka.localhost
+    http:
+      paths:
+        - path: /
+          backend:
+            serviceName: events-demo-kafka-cp-control-center
+            servicePort: cc-http
+
