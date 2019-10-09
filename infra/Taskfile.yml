@@ -1,10 +1,20 @@
 version: '2'
 
 tasks:
+  install-local-traefik:
+    cmds:
+      - helm install --name events-demo-traefik stable/traefik --set dashboard.enabled=true,dashboard.domain=dashboard.localhost
+
   install-local-kafka:
     cmds:
       - helm install --name events-demo-kafka ./cp-helm-charts -f ./local/kafka/cp-helm-config.yaml
+      - kubectl apply -f ./local/kafka/control-center-ingress.yaml
 
   delete-local-kafka:
     cmds:
       - helm delete --purge events-demo-kafka
+      - kubectl delete -f ./local/kafka/control-center-ingress.yaml
+
+  delete-local-traefik:
+    cmds:
+      - helm delete --purge events-demo-traefik
