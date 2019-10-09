@@ -6,7 +6,7 @@ vars:
 tasks:
   dev:
     cmds:
-      - telepresence --docker-run --rm -it -v ${PWD}:/usr/local/ingest -w /usr/local/ingest golang:1.13 /bin/bash
+      - telepresence --docker-run --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
 
   build:
     cmds:
