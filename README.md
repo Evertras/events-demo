@@ -2,9 +2,16 @@
 
 AKA Enterprise Tic Tac Toe
 
+*Note*: Since this is for proof of concept, everything is crammed into a single repo.  In a real world
+scenario each subdirectory would almost certainly be its own repository.
+
 ## Prerequisites
 
 Because Enterprise software is Enterprisey, there are a few things you'll need...
+
+### Go
+
+Get yourself some [Go](https://golang.org/doc/install), 1.13 or higher.
 
 ### Taskfile
 
@@ -39,38 +46,5 @@ have to deploy to staging environments just to test our changes.
 
 ## Getting Started
 
-Go to [the infra subdirectory](./infra) and run:
-
-```bash
-# Installs Traefik to act as an ingress for your Kubernetes cluster
-task install-local-traefik
-
-# This will set up a local Kafka stack in your Kubernetes cluster
-task install-local-kafka
-```
-
-You can visit [the Traefik dashboard](http://dashboard.localhost/dashboard)
-to see what services are available to the outside world.  As we add other services, they will
-use the `<service>.localhost` convention.
-
-[See this article](https://medium.com/@geraldcroes/kubernetes-traefik-101-when-simplicity-matters-957eeede2cf8) for a great introduction on using Traefik with Kubernetes.
-
-## Tearing Down
-
-Each `install-local-*` command has a `delete-local-*` counterpart.
-
-```bash
-task delete-local-kafka
-task delete-local-traefik
-```
-
-Note that any `install` or `delete` can be run in any order at any time; none should
-depend on the other to exist.
-
-## Kafka connection information
-
-For any clients that need to know a Kafka broker, supply the following:
-
-Kafka brokers: `events-demo-kafka-cp-kafka-headless:9092`
-Zookeeper: `events-demo-kafka-cp-zookeeper-headless:2181`
+[Go to the infra subdirectory](./infra) to get your stack running!
 
