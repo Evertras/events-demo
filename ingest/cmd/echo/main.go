@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/evertras/events-demo/ingest/lib/messages"
+	"github.com/Evertras/events-demo/ingest/lib/messages"
 
 	"google.golang.org/grpc"
 )

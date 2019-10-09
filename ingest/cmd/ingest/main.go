@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/evertras/events-demo/ingest/lib/messages"
+	"github.com/Evertras/events-demo/ingest/lib/messages"
 	kafka "github.com/segmentio/kafka-go"
 )
 
@@ -37,7 +37,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
-		ticker := time.NewTicker(time.Millisecond * 100)
+		ticker := time.NewTicker(time.Second)
 
 		for {
 			select {
