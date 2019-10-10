@@ -1,0 +1,52 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: events-demo-sample-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: events-demo-sample
+  template:
+    metadata:
+      labels:
+        app: events-demo-sample
+    spec:
+      containers:
+      - name: events-demo-sample-container
+        image: evertras/events-demo-sample:latest
+        imagePullPolicy: IfNotPresent
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: events-demo-sample-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
+    ingress.kubernetes.io/auth-type: forward
+    ingress.kubernetes.io/auth-url: http://events-demo-auth-service:13041/check
+    ingress.kubernetes.io/auth-response-headers: X-User-ID
+spec:
+  rules:
+  - host: events-demo.localhost
+    http:
+      paths:
+      - path: /sample
+        backend:
+          serviceName: events-demo-sample-service
+          servicePort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: events-demo-sample-service
+spec:
+  ports:
+  - name: http
+    targetPort: 13030
+    port: 13030
+  selector:
+    app: events-demo-sample
+

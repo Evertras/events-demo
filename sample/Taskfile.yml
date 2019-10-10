@@ -7,5 +7,5 @@ tasks:
 
   build:
     cmds:
-      - docker build -t evertras/events-demo-auth .
+      - docker build -t evertras/events-demo-sample .
 

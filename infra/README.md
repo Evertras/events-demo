@@ -14,7 +14,7 @@ task install-local-traefik
 task install-local-kafka
 ```
 
-You can visit [the Traefik dashboard](http://dashboard.localhost/dashboard)
+You can visit [the Traefik dashboard](http://traefik.localhost/)
 to see what services are available to the outside world.  As we add other services, they will
 use the `<service>.localhost` convention.
 

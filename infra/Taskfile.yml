@@ -3,7 +3,7 @@ version: '2'
 tasks:
   install-local-traefik:
     cmds:
-      - helm install --name events-demo-traefik stable/traefik --set dashboard.enabled=true,dashboard.domain=dashboard.localhost
+      - helm install --name events-demo-traefik stable/traefik -f local/traefik/values.yaml
 
   install-local-kafka:
     cmds:
