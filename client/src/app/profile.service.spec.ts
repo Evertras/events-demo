@@ -32,12 +32,15 @@ describe('ProfileService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('gets profile data from the correct URL', () => {
+  it('gets profile data from the correct URL using auth headers', () => {
     service.getProfile().subscribe(profile => {
       expect(profile).toEqual(mockProfile);
     });
 
-    const req = httpTestingController.expectOne('api/profile');
+    const req = httpTestingController.expectOne(
+      r => r.url === 'api/profile'
+        && r.headers.has('X-Auth-Token')
+    );
 
     req.flush(mockProfile);
   });
