@@ -1,5 +1,12 @@
 # Client
 
+An outgame client sample.
+
+Why Angular?  To give it a try and learn a foundation for understanding ngx-admin.
+Nothing about Angular is special here, it could be whatever you want.
+
+# Angular Boilerplate Readme Stuff
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.9.
 
 ## Development server
