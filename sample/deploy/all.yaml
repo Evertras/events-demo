@@ -18,6 +18,18 @@ spec:
         image: evertras/events-demo-sample:latest
         imagePullPolicy: IfNotPresent
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: events-demo-sample-service
+spec:
+  ports:
+  - name: http
+    targetPort: 13030
+    port: 13030
+  selector:
+    app: events-demo-sample
+---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -37,16 +49,4 @@ spec:
         backend:
           serviceName: events-demo-sample-service
           servicePort: http
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: events-demo-sample-service
-spec:
-  ports:
-  - name: http
-    targetPort: 13030
-    port: 13030
-  selector:
-    app: events-demo-sample
 
