@@ -9,3 +9,11 @@ tasks:
     cmds:
       - docker build -t evertras/events-demo-sample .
 
+  install-local:
+    cmds:
+      - kubectl apply -f deploy/all.yaml
+
+  delete-local:
+    cmds:
+      - kubectl delete -f deploy/all.yaml
+
