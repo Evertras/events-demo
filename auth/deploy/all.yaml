@@ -30,7 +30,7 @@ spec:
   - host: events-demo.localhost
     http:
       paths:
-      - path: /auth
+      - path: /api/auth
         backend:
           serviceName: events-demo-auth-service
           servicePort: http

@@ -45,7 +45,7 @@ spec:
   - host: events-demo.localhost
     http:
       paths:
-      - path: /profile
+      - path: /api/profile
         backend:
           serviceName: events-demo-profile-service
           servicePort: http
