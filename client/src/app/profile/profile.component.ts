@@ -9,7 +9,9 @@ import { ProfileService } from 'src/app/profile.service';
 })
 export class ProfileComponent implements OnInit {
 
-  profile: IProfile;
+  profile: IProfile = {
+    intro: '',
+  };
 
   constructor(
     private profileService: ProfileService,

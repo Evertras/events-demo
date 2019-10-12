@@ -4,7 +4,7 @@ import { IProfile } from 'src/data/profile';
 import { Observable } from 'rxjs';
 import {AuthService} from 'src/app/auth.service';
 
-const profileEndpoint = 'profile';
+const profileEndpoint = 'api/profile';
 
 @Injectable({
   providedIn: 'root'
