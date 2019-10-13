@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
-import {InMemoryDbService} from 'angular-in-memory-web-api';
-import {IProfile} from 'src/data/profile';
+import { InMemoryDbService } from 'angular-in-memory-web-api';
+import { IProfile } from 'src/data/profile';
+import { IOpenGame } from 'src/data/game';
+
+const now = new Date();
 
 @Injectable({
   providedIn: 'root'
@@ -8,10 +11,19 @@ import {IProfile} from 'src/data/profile';
 export class InMemoryDataService implements InMemoryDbService {
   createDb() {
     const profile: IProfile = {
-      intro: 'Hello!',
+      intro: 'Hello!  This is an in-memory profile intro.',
     };
 
-    return { profile };
+    const openGames: IOpenGame[] = [{
+      id: 13,
+      name: 'First in memory game',
+      created: now,
+    }];
+
+    return {
+      profile,
+      openGames,
+     };
   }
 
   constructor() { }

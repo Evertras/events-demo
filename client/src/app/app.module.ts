@@ -10,6 +10,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ProfileComponent } from './profile/profile.component';
 import { InMemoryDataService } from './in-memory-data.service';
+import { HomeComponent } from './home/home.component';
 
 const conditionalImports = [];
 
@@ -28,6 +29,7 @@ if (environment.inMemory) {
   declarations: [
     AppComponent,
     ProfileComponent,
+    HomeComponent,
   ],
   imports: [
     BrowserModule,
