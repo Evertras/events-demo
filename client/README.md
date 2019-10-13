@@ -3,7 +3,9 @@
 An outgame client sample.
 
 Why Angular?  To give it a try and learn a foundation for understanding ngx-admin.
-Nothing about Angular is special here, it could be whatever you want.
+Nothing about Angular is special here, it could be whatever you want.  The structure
+of this part of the repo could almost certainly use improvements and reflects
+the author's inexperience with Angular, so take with a grain of salt!
 
 # Angular Boilerplate Readme Stuff
 
