@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { IProfile } from 'src/data/profile';
+
 import { Observable } from 'rxjs';
-import {AuthService} from 'src/app/auth.service';
+
+import { IProfile } from 'src/data/profile';
+import { AuthService } from 'src/app/auth.service';
 
 const profileEndpoint = 'api/profile';
 

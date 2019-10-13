@@ -5,17 +5,28 @@ import {
 } from '@angular/common/http/testing';
 import { HttpClient } from '@angular/common/http';
 
-import { ProfileService } from './profile.service';
-import { IProfile } from 'src/data/profile';
+import { GameService } from './game.service';
+import { IOpenGame } from 'src/data/game';
 
-const mockProfile: IProfile = {
-  intro: 'This is a mock profile!',
-};
+const now = new Date();
 
-describe('ProfileService', () => {
+const mockOpenGames: IOpenGame[] = [
+  {
+    id: 17,
+    name: 'An open game',
+    created: new Date(now.getTime() - 60 * 1000),
+  },
+  {
+    id: 481,
+    name: 'テスト',
+    created: new Date(now.getTime() - 120 * 1000),
+  },
+];
+
+describe('GameService', () => {
   let httpClient: HttpClient;
   let httpTestingController: HttpTestingController;
-  let service: ProfileService;
+  let service: GameService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -24,27 +35,23 @@ describe('ProfileService', () => {
 
     httpClient = TestBed.get(HttpClient);
     httpTestingController = TestBed.get(HttpTestingController);
-    service = TestBed.get(ProfileService);
-  });
-
-  afterEach(() => {
-    httpTestingController.verify();
+    service = TestBed.get(GameService);
   });
 
   it('is created', () => {
     expect(service).toBeTruthy();
   });
 
-  it('gets profile data from the correct URL using auth headers', () => {
-    service.getProfile().subscribe(profile => {
-      expect(profile).toEqual(mockProfile);
+  it('gets an open game list', () => {
+    service.getOpenGames().subscribe(games => {
+      expect(games.length).toBe(mockOpenGames.length);
     });
 
     const req = httpTestingController.expectOne(
-      r => r.url === 'api/profile'
+      r => r.url === 'api/games/open'
         && r.headers.has('X-Auth-Token')
     );
 
-    req.flush(mockProfile);
+    req.flush(mockOpenGames);
   });
 });
