@@ -31,4 +31,8 @@ export class DebugMessagesComponent implements OnInit {
     return levelNames[level];
   }
 
+  clearEntries() {
+    this.entries = [];
+  }
+
 }
