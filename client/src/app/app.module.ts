@@ -11,6 +11,7 @@ import { AppComponent } from './app.component';
 import { ProfileComponent } from './profile/profile.component';
 import { InMemoryDataService } from './in-memory-data.service';
 import { HomeComponent } from './home/home.component';
+import { DebugMessagesComponent } from './debug-messages/debug-messages.component';
 
 const conditionalImports = [];
 
@@ -31,6 +32,7 @@ if (environment.inMemory) {
     AppComponent,
     ProfileComponent,
     HomeComponent,
+    DebugMessagesComponent,
   ],
   imports: [
     BrowserModule,
@@ -39,6 +41,6 @@ if (environment.inMemory) {
     ...conditionalImports,
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule { }

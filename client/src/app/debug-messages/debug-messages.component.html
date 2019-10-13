@@ -1,0 +1,16 @@
+<p>debug-messages works!</p>
+
+<table *ngIf='entries.length'>
+  <thead>
+    <tr>
+      <th>Level</th>
+      <th>Message</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor='let entry of entries' [ngClass]='"log-level-" + entry.level'>
+      <td>{{getLevelName(entry.level)}}</td>
+      <td>{{entry.msg}}</td>
+    </tr>
+  </tbody>
+</table>
