@@ -15,7 +15,7 @@ const logServiceStub: Partial<LogService> = {
 describe('DebugMessagesComponent', () => {
   let component: DebugMessagesComponent;
   let fixture: ComponentFixture<DebugMessagesComponent>;
-  let compiled: any;
+  let compiled: HTMLElement;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
@@ -64,7 +64,12 @@ describe('DebugMessagesComponent', () => {
     fixture.detectChanges();
     expect(compiled.querySelector('table')).toBeTruthy('Should show table now that messages exist');
 
-    compiled.querySelector('.clear').click();
+    const button: HTMLButtonElement = compiled.querySelector('button.clear');
+
+    expect(button).toBeDefined();
+
+    button.click();
+
     expect(component.entries.length).toEqual(0, 'Did not clear messages');
     fixture.detectChanges();
     expect(compiled.querySelector('table')).toBeFalsy('Should not show table after clear');
