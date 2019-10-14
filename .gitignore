@@ -23,3 +23,6 @@ ingest/main
 # Proto builds
 **/*.pb.go
 
+# Terraform
+.terraform/
+.terraform.tfstate.lock.info

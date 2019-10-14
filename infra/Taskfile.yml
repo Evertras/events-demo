@@ -5,6 +5,10 @@ tasks:
     cmds:
       - helm install --name events-demo-traefik stable/traefik -f local/traefik/values.yaml
 
+  install-aws-traefik:
+    cmds:
+      - helm install --name events-demo-traefik stable/traefik -f aws/traefik/values.yaml
+
   install-local-kafka:
     cmds:
       - helm install --name events-demo-kafka ./cp-helm-charts -f ./local/kafka/cp-helm-config.yaml
@@ -18,3 +22,49 @@ tasks:
   delete-local-traefik:
     cmds:
       - helm delete --purge events-demo-traefik
+
+  delete-aws-traefik:
+    cmds:
+      - helm delete --purge events-demo-traefik
+
+  terraform-init:
+    status:
+      - test -d ./terraform
+    cmds:
+      - terraform init terraform
+
+  terraform-format:
+    cmds:
+      - terraform fmt terraform
+
+  terraform-plan:
+    deps:
+      - terraform-init
+      - terraform-format
+    cmds:
+      - terraform plan terraform
+
+  terraform-apply:
+    deps:
+      - terraform-init
+      - terraform-format
+    cmds:
+      - terraform apply terraform
+
+  terraform-destroy:
+    deps:
+      - terraform-init
+      - terraform-format
+    cmds:
+      - terraform destroy terraform
+
+  kubectl-config:
+    cmds:
+      - aws eks update-kubeconfig --name events-demo
+  
+  helm-init:
+    cmds:
+      - helm init --history-max 200
+      - kubectl create serviceaccount --namespace kube-system tiller
+      - kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+      - kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
