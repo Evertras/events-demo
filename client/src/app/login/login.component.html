@@ -8,5 +8,5 @@
     <input [(ngModel)]="password" placeholder="password" type="password" />
   </label>
 
-  <button (click)='login()'>Login</button>
+  <button (click)='login()' [disabled]='processing'>Login</button>
 </div>

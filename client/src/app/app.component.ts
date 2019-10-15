@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 
 import { environment } from 'src/environments/environment';
+import { AuthService } from './auth.service';
 
 
 @Component({
@@ -11,4 +12,8 @@ import { environment } from 'src/environments/environment';
 export class AppComponent {
   title = 'Awesome Outgame Client';
   showDebugMessages = !environment.production;
+
+  constructor(
+    private auth: AuthService,
+  ) {}
 }

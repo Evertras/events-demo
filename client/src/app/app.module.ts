@@ -24,7 +24,7 @@ if (environment.inMemory) {
       {
         apiBase: 'api/',
         dataEncapsulation: false,
-        delay: 200,
+        delay: 800,
       }),
   );
 }

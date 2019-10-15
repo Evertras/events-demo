@@ -1,9 +1,13 @@
 <h1>{{title}}</h1>
 
 <nav>
-  <a routerLink='/'>Home</a>
-  <a routerLink='/login'>Login</a>
-  <a routerLink='/profile'>My Profile</a>
+  <a routerLink='/' routerLinkActive='active'>Home</a>
+  <span *ngIf='!auth.isAuthenticated()'>
+    <a routerLink='/login' routerLinkActive='active'>Login</a>
+  </span>
+  <span *ngIf='auth.isAuthenticated()'>
+    <a routerLink='/profile' routerLinkActive='active'>My Profile</a>
+  </span>
 </nav>
 
 <router-outlet></router-outlet>
