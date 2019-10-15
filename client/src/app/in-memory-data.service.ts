@@ -37,7 +37,7 @@ export class InMemoryDataService implements InMemoryDbService {
   get(reqInfo: RequestInfo) {
     this.log.trace('GET ' + reqInfo.url);
 
-    if (reqInfo.url !== 'api/auth/login' && !this.authHeaderValid(reqInfo)) {
+    if (reqInfo.collectionName !== 'auth' && !this.authHeaderValid(reqInfo)) {
       return reqInfo.utils.createResponse$(() => {
         const status = 401;
         const { headers, url } = reqInfo;
