@@ -9,6 +9,10 @@ tasks:
     cmds:
       - docker build -t evertras/events-demo-auth .
 
+  test:
+    cmds:
+      - go test -v ./lib/...
+
   install-local:
     cmds:
       - kubectl apply -f deploy/main.yaml
