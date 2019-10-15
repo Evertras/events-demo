@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -24,9 +24,12 @@ export class ProfileService {
   getProfile(): Observable<IProfile> {
     this.log.debug('Fetching profile');
 
-    console.log(this.http);
+    const headers = this.auth.authHeaders();
 
-    const req = this.http.get<IProfile>(profileEndpoint, { headers: this.auth.authHeaders() });
+    const req = this.http.get<IProfile>(
+      profileEndpoint,
+      { headers },
+    );
 
     return req.pipe(
       catchError(this.handleError<IProfile>('getProfile', {
@@ -37,7 +40,7 @@ export class ProfileService {
 
   private handleError<T>(method: string, safeRet: T) {
     return (error: any): Observable<T> => {
-      this.log.error(`${method} failed: ${error.message || error}`);
+      this.log.error(`${method} failed: ${error.message || JSON.stringify(error)}`);
 
       return of(safeRet);
     };

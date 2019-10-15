@@ -20,8 +20,10 @@ export class LoginComponent implements OnInit {
   }
 
   login() {
-    this.log.debug('Logging in as ' + this.username);
-    this.auth.login(this.username, this.password);
+    if (this.username) {
+      this.log.debug('Logging in as ' + this.username);
+      this.auth.login(this.username, this.password).subscribe();
+    }
   }
 
 }

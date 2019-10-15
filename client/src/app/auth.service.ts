@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import { map, catchError, tap } from 'rxjs/operators';
 import { Observable, of, throwError } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
 
 import { LogService } from 'src/app/log.service';
 
@@ -15,20 +15,19 @@ const loginEndpoint = `${authEndpoint}/login`;
 })
 export class AuthService {
 
+  private tokenValue = '';
+
   constructor(
     private http: HttpClient,
     private log: LogService,
   ) { }
 
   isAuthenticated(): boolean {
-    // TODO: actual auth
-    return true;
+    return !!this.tokenValue;
   }
 
   login(username: string, password: string): Observable<string> {
     this.log.debug('AuthService.login ' + loginEndpoint);
-
-    console.log(this.http);
 
     const res = this.http.post<{ token: string }>(
       loginEndpoint,
@@ -37,7 +36,7 @@ export class AuthService {
 
     return res.pipe(
       map(r => r.token),
-      tap(_ => this.log.trace('hi')),
+      tap(token => this.tokenValue = token),
       catchError(e => {
         this.log.warning(e);
         return throwError(e);
@@ -46,19 +45,10 @@ export class AuthService {
   }
 
   authHeaders(existing?: HttpHeaders): HttpHeaders {
-    // TODO: actual auth
     if (existing) {
-      return existing.set(authHeaderKey, 'totally-secure');
+      return existing.set(authHeaderKey, this.tokenValue);
     }
 
-    return new HttpHeaders({ [authHeaderKey]: 'totally-secure' });
-  }
-
-  private handleError<T>(method: string, safeRet: T) {
-    return (error: any): Observable<T> => {
-      this.log.error(`${method} failed: ${error.message || error}`);
-
-      return of(safeRet);
-    };
+    return new HttpHeaders({ [authHeaderKey]: this.tokenValue });
   }
 }

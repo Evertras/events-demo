@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
-import { InMemoryDbService, RequestInfo, ResponseOptions } from 'angular-in-memory-web-api';
+import { InMemoryDbService, RequestInfo, ResponseOptions, getStatusText } from 'angular-in-memory-web-api';
 import { IProfile } from 'src/data/profile';
 import { IOpenGame } from 'src/data/game';
 import { LogService } from 'src/app/log.service';
+import { Observable, of } from 'rxjs';
+import { HttpHeaders } from '@angular/common/http';
 
 const now = new Date();
+const fakeToken = 'abkjaug7dFxl';
 
 @Injectable({
   providedIn: 'root'
@@ -31,20 +34,59 @@ export class InMemoryDataService implements InMemoryDbService {
      };
   }
 
-    /*
-  get(_: RequestInfo) {
+  get(reqInfo: RequestInfo) {
     this.log.debug('GET intercept');
+
+    if (reqInfo.url !== 'api/auth/login' && !this.authHeaderValid(reqInfo)) {
+      return reqInfo.utils.createResponse$(() => {
+        const status = 401;
+        const { headers, url } = reqInfo;
+
+        const options: ResponseOptions = {
+          headers,
+          status,
+          statusText: getStatusText(status),
+          url,
+        };
+
+        return options;
+      });
+    }
+  }
+
+  private authHeaderValid(reqInfo: RequestInfo): boolean {
+    // The typings here are not what they say they are...
+    // https://github.com/angular/in-memory-web-api/issues/156
+    const token = ((reqInfo.req as any).headers as HttpHeaders).get('X-Auth-Token');
+
+    return token === fakeToken;
   }
 
   post(reqInfo: RequestInfo) {
     this.log.debug('POST intercept');
-    this.log.debug(JSON.stringify(reqInfo, null, 2));
+
+    if (reqInfo.url === 'api/auth/login') {
+      return reqInfo.utils.createResponse$(() => {
+        const body = {token: fakeToken};
+        const { headers, url } = reqInfo;
+        const status = 200;
+
+        const options: ResponseOptions = {
+          body,
+          headers,
+          status,
+          statusText: getStatusText(status),
+          url,
+        };
+
+        return options;
+      });
+    }
   }
 
   put(_: RequestInfo) {
     this.log.debug('PUT intercept');
   }
-     */
 
   responseInterceptor(resOptions: ResponseOptions, reqInfo: RequestInfo) {
     this.log.trace(`${reqInfo.method.toUpperCase()} ${reqInfo.req.url}`);
