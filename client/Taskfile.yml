@@ -3,7 +3,7 @@ version: '2'
 tasks:
   dev:
     cmds:
-      - telepresence --docker-run --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code node:11 /bin/bash
+      - telepresence --docker-run --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code node:12 /bin/bash
 
   build:
     cmds:

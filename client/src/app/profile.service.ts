@@ -24,6 +24,8 @@ export class ProfileService {
   getProfile(): Observable<IProfile> {
     this.log.debug('Fetching profile');
 
+    console.log(this.http);
+
     const req = this.http.get<IProfile>(profileEndpoint, { headers: this.auth.authHeaders() });
 
     return req.pipe(
