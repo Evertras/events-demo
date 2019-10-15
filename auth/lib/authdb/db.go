@@ -9,7 +9,16 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type Db struct {
+type Db interface {
+	Connect() error
+	Ping() error
+	MigrateToLatest() error
+
+	RegisterUser(username string, password string) error
+	ValidateUser(username string, password string) (bool, error)
+}
+
+type db struct {
 	db   *sql.DB
 	opts ConnectionOptions
 }
@@ -20,35 +29,35 @@ type ConnectionOptions struct {
 	Address  string
 }
 
-func New(opts ConnectionOptions) *Db {
-	return &Db{
+func New(opts ConnectionOptions) Db {
+	return &db{
 		db:   nil,
 		opts: opts,
 	}
 }
 
-func (db *Db) Connect() error {
+func (d *db) Connect() error {
 	var err error
 
-	connStr := fmt.Sprintf("postgres://%s:%s@%s/auth?sslmode=disable", db.opts.User, db.opts.Password, db.opts.Address)
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/auth?sslmode=disable", d.opts.User, d.opts.Password, d.opts.Address)
 
-	db.db, err = sql.Open("postgres", connStr)
+	d.db, err = sql.Open("postgres", connStr)
 
 	return err
 }
 
-func (db *Db) Ping() error {
-	if db.db == nil {
+func (d *db) Ping() error {
+	if d.db == nil {
 		return errors.New("db not connected")
 	}
 
-	return db.db.Ping()
+	return d.db.Ping()
 }
 
 // MigrateToLatest applies all migration scripts in order to make
 // sure the database schema is up to date.
-func (db *Db) MigrateToLatest() error {
-	index, err := db.getLatestMigrationIndex()
+func (d *db) MigrateToLatest() error {
+	index, err := d.getLatestMigrationIndex()
 
 	if err != nil {
 		return err
@@ -63,7 +72,7 @@ func (db *Db) MigrateToLatest() error {
 		return errors.New(fmt.Sprintf("index %d out of range", index))
 	}
 
-	tx, err := db.db.Begin()
+	tx, err := d.db.Begin()
 
 	if err != nil {
 		return err
@@ -87,8 +96,8 @@ UPDATE migration SET last=$1
 	return tx.Commit()
 }
 
-func (db *Db) getLatestMigrationIndex() (int, error) {
-	row := db.db.QueryRow(`SELECT last FROM migration`)
+func (d *db) getLatestMigrationIndex() (int, error) {
+	row := d.db.QueryRow(`SELECT last FROM migration`)
 
 	var rawIndex int64
 
@@ -100,4 +109,12 @@ func (db *Db) getLatestMigrationIndex() (int, error) {
 	}
 
 	return int(rawIndex), err
+}
+
+func (d *db) RegisterUser(username string, password string) error {
+	return nil
+}
+
+func (d *db) ValidateUser(username string, password string) (bool, error) {
+	return true, nil
 }

@@ -13,16 +13,16 @@ const headerUserID = "X-User-ID"
 func main() {
 	addr := "0.0.0.0:13041"
 
-	server := server.New(addr)
+	db := initDb()
 
-	checkDb()
+	server := server.New(addr, db)
 
 	log.Println("Serving", addr)
 
 	log.Fatal(server.ListenAndServe())
 }
 
-func checkDb() {
+func initDb() authdb.Db {
 	db := authdb.New(authdb.ConnectionOptions{
 		User:     "admin",
 		Password: "admin",
@@ -30,21 +30,20 @@ func checkDb() {
 	})
 
 	if err := db.Connect(); err != nil {
-		log.Println("Error connecting to DB:", err)
-		return
+		log.Fatalln("Error connecting to DB:", err)
 	}
 
 	log.Println("DB connected")
 
 	if err := db.Ping(); err != nil {
-		log.Println("Error pinging DB:", err)
-		return
+		log.Fatalln("Error pinging DB:", err)
 	}
 
 	log.Println("DB pinged")
 
 	if err := db.MigrateToLatest(); err != nil {
-		log.Println("Error migrating:", err)
-		return
+		log.Fatalln("Error migrating:", err)
 	}
+
+	return db
 }

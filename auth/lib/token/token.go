@@ -10,7 +10,7 @@ import (
 var signKey = []byte("super sekrit key")
 
 // TODO: make this config
-const tokenDuration = time.Minute * 10
+const tokenDuration = time.Hour * 10
 
 type Claim struct {
 	Username string `json:"username"`

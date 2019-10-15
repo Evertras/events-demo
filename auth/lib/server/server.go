@@ -3,12 +3,15 @@ package server
 import (
 	"net/http"
 	"time"
+
+	"github.com/Evertras/events-demo/auth/lib/authdb"
 )
 
-func New(addr string) *http.Server {
+func New(addr string, db authdb.Db) *http.Server {
 	router := http.NewServeMux()
 
 	router.HandleFunc("/check", checkAuthHandler)
+	router.HandleFunc("/login", loginHandler(db))
 
 	return &http.Server{
 		Addr:         addr,
