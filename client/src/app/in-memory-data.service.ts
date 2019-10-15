@@ -35,7 +35,7 @@ export class InMemoryDataService implements InMemoryDbService {
   }
 
   get(reqInfo: RequestInfo) {
-    this.log.debug('GET intercept');
+    this.log.trace('GET ' + reqInfo.url);
 
     if (reqInfo.url !== 'api/auth/login' && !this.authHeaderValid(reqInfo)) {
       return reqInfo.utils.createResponse$(() => {
@@ -63,7 +63,7 @@ export class InMemoryDataService implements InMemoryDbService {
   }
 
   post(reqInfo: RequestInfo) {
-    this.log.debug('POST intercept');
+    this.log.trace('POST ' + reqInfo.url);
 
     if (reqInfo.url === 'api/auth/login') {
       return reqInfo.utils.createResponse$(() => {
@@ -84,12 +84,13 @@ export class InMemoryDataService implements InMemoryDbService {
     }
   }
 
-  put(_: RequestInfo) {
-    this.log.debug('PUT intercept');
+  put(reqInfo: RequestInfo) {
+    this.log.trace('PUT ' + reqInfo.url);
   }
 
+  // Leaving this declared here for future use, but right now it's essentially a pass-through
   responseInterceptor(resOptions: ResponseOptions, reqInfo: RequestInfo) {
-    this.log.trace(`${reqInfo.method.toUpperCase()} ${reqInfo.req.url}`);
+    // this.log.trace(`${reqInfo.method.toUpperCase()} ${reqInfo.req.url}`);
 
     return resOptions;
   }

@@ -27,8 +27,6 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<string> {
-    this.log.debug('AuthService.login ' + loginEndpoint);
-
     const res = this.http.post<{ token: string }>(
       loginEndpoint,
       { username, password },
