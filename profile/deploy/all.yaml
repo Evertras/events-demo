@@ -38,7 +38,7 @@ metadata:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
     ingress.kubernetes.io/auth-type: forward
-    ingress.kubernetes.io/auth-url: http://events-demo-auth-service:13041/check
+    ingress.kubernetes.io/auth-url: http://events-demo-auth-api:13041/check
     ingress.kubernetes.io/auth-response-headers: X-User-ID
 spec:
   rules:

@@ -1,0 +1,88 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: events-demo-auth-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: events-demo-auth-api
+  template:
+    metadata:
+      labels:
+        app: events-demo-auth-api
+    spec:
+      containers:
+      - name: events-demo-auth-container
+        image: evertras/events-demo-auth:latest
+        imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: events-demo-auth-api
+spec:
+  ports:
+  - name: http
+    targetPort: 13041
+    port: 13041
+  selector:
+    app: events-demo-auth-api
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: events-demo-auth-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
+spec:
+  rules:
+  - host: events-demo.localhost
+    http:
+      paths:
+      - path: /api/auth
+        backend:
+          serviceName: events-demo-auth-api
+          servicePort: http
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: events-demo-auth-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: events-demo-auth-db
+  template:
+    metadata:
+      labels:
+        app: events-demo-auth-db
+    spec:
+      containers:
+      - name: events-demo-auth-db
+        image: postgres:9.5-alpine
+        imagePullPolicy: IfNotPresent
+        env:
+          # THIS IS VERY NOT SECURE JUST TO BE CLEAR!!!!!!!!!!!!!!!!!
+          # TODO: Example of how to use K8s secrets, or maybe even Vault
+          - name: POSTGRES_USER
+            value: admin
+          - name: POSTGRES_PASSWORD
+            value: admin
+          - name: POSTGRES_DB
+            value: auth
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: events-demo-auth-db
+spec:
+  ports:
+  - name: db
+    targetPort: 5432
+    port: 5432
+  selector:
+    app: events-demo-auth-db

@@ -11,9 +11,11 @@ tasks:
 
   install-local:
     cmds:
-      - kubectl apply -f deploy/all.yaml
+      - kubectl apply -f deploy/main.yaml
+      - kubectl apply -f deploy/adminer.yaml
 
   delete-local:
     cmds:
-      - kubectl delete -f deploy/all.yaml
+      - kubectl delete -f deploy/main.yaml
+      - kubectl delete -f deploy/adminer.yaml
 
