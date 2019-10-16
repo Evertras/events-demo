@@ -2,7 +2,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: events-demo-client-deployment
+  name: events-demo-client
 spec:
   replicas: 1
   selector:
@@ -21,7 +21,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: events-demo-client-service
+  name: events-demo-client
 spec:
   ports:
   - name: http
@@ -44,6 +44,6 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: events-demo-client-service
+          serviceName: events-demo-client
           servicePort: http
 
