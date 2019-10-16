@@ -14,6 +14,13 @@ tasks:
       - helm install --name events-demo-kafka ./cp-helm-charts -f ./local/kafka/cp-helm-config.yaml
       - kubectl apply -f ./local/kafka/control-center-ingress.yaml
 
+  install-local-logging:
+    cmds:
+      - kubectl apply -f ./local/logs/namespace.yml
+      - kubectl apply -f ./local/logs/es.yml
+      - kubectl apply -f ./local/logs/kibana.yml
+      - kubectl apply -f ./local/logs/fluentd.yml
+
   delete-local-kafka:
     cmds:
       - helm delete --purge events-demo-kafka
@@ -26,6 +33,13 @@ tasks:
   delete-aws-traefik:
     cmds:
       - helm delete --purge events-demo-traefik
+
+  delete-local-logging:
+    cmds:
+      - kubectl delete -f ./local/logs/fluentd.yml
+      - kubectl delete -f ./local/logs/kibana.yml
+      - kubectl delete -f ./local/logs/es.yml
+      - kubectl delete -f ./local/logs/namespace.yml
 
   terraform-init:
     status:
