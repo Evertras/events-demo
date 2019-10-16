@@ -21,7 +21,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: events-demo-profile-service
+  name: events-demo-profile
 spec:
   ports:
   - name: http
@@ -47,6 +47,6 @@ spec:
       paths:
       - path: /api/profile
         backend:
-          serviceName: events-demo-profile-service
+          serviceName: events-demo-profile
           servicePort: http
 
