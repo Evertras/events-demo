@@ -15,6 +15,10 @@ type LoginBody struct {
 	Password string `json:"password"`
 }
 
+type TokenResponse struct {
+	Token string `json:"token"`
+}
+
 func loginHandler(db authdb.Db) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
@@ -48,7 +52,7 @@ func loginHandler(db authdb.Db) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		header, err := token.New(login.Username)
+		t, err := token.New(login.Username)
 
 		if err != nil {
 			w.WriteHeader(500)
@@ -56,7 +60,15 @@ func loginHandler(db authdb.Db) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = w.Write([]byte(header))
+		resBody, err := json.Marshal(TokenResponse { Token: t })
+
+		if err != nil {
+			w.WriteHeader(500)
+			log.Println("Failed to marshal token response:", err)
+			return
+		}
+
+		_, err = w.Write(resBody)
 
 		if err != nil {
 			w.WriteHeader(500)

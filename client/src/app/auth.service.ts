@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 
 import { LogService } from 'src/app/log.service';
@@ -36,7 +36,7 @@ export class AuthService {
       map(r => r.token),
       tap(token => this.tokenValue = token),
       catchError(e => {
-        this.log.warning(e);
+        this.log.warning(JSON.stringify(e, null, 2));
         return throwError(e);
       }),
     );
