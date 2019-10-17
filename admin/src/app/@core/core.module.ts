@@ -12,6 +12,7 @@ import {
   StateService,
 } from './utils';
 import { UserData } from './data/users';
+import { TestsData } from './data/tests';
 import { ElectricityData } from './data/electricity';
 import { SmartTableData } from './data/smart-table';
 import { UserActivityData } from './data/user-activity';
@@ -32,6 +33,7 @@ import { VisitorsAnalyticsData } from './data/visitors-analytics';
 import { SecurityCamerasData } from './data/security-cameras';
 
 import { UserService } from './mock/users.service';
+import { TestsService } from './mock/tests.service';
 import { ElectricityService } from './mock/electricity.service';
 import { SmartTableService } from './mock/smart-table.service';
 import { UserActivityService } from './mock/user-activity.service';
@@ -90,6 +92,7 @@ const DATA_SERVICES = [
   { provide: StatsProgressBarData, useClass: StatsProgressBarService },
   { provide: VisitorsAnalyticsData, useClass: VisitorsAnalyticsService },
   { provide: SecurityCamerasData, useClass: SecurityCamerasService },
+  { provide: TestsData, useClass: TestsService },
 ];
 
 export class NbSimpleRoleProvider extends NbRoleProvider {

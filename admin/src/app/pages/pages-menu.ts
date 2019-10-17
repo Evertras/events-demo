@@ -18,7 +18,17 @@ export const MENU_ITEMS: NbMenuItem[] = [
     link: '/pages/games',
   },
   {
-    title: 'FEATURES',
+    title: 'Tests',
+    icon: 'pantone-outline',
+    children: [
+      {
+        title: 'List',
+        link: '/pages/tests/list',
+      },
+    ],
+  },
+  {
+    title: 'REFERENCE',
     group: true,
   },
   {

@@ -24,6 +24,11 @@ const routes: Routes = [{
       component: DashboardComponent,
     },
     {
+      path: 'tests',
+      loadChildren: () => import('./tests/tests.module')
+        .then(m => m.TestsModule),
+    },
+    {
       path: 'layout',
       loadChildren: () => import('./layout/layout.module')
         .then(m => m.LayoutModule),
