@@ -26,7 +26,7 @@ func initDb() authdb.Db {
 	db := authdb.New(authdb.ConnectionOptions{
 		User:     "admin",
 		Password: "admin",
-		Address:  "events-demo-auth-db",
+		Address:  "auth-db",
 	})
 
 	if err := db.Connect(); err != nil {

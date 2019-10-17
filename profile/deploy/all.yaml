@@ -2,43 +2,46 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: events-demo-profile-deployment
+  name: profile
+  namespace: events-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: events-demo-profile
+      app: profile
   template:
     metadata:
       labels:
-        app: events-demo-profile
+        app: profile
     spec:
       containers:
-      - name: events-demo-profile-container
+      - name: profile-container
         image: evertras/events-demo-profile:latest
         imagePullPolicy: IfNotPresent
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: events-demo-profile
+  name: profile
+  namespace: events-demo
 spec:
   ports:
   - name: http
     targetPort: 13083
     port: 13083
   selector:
-    app: events-demo-profile
+    app: profile
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: events-demo-profile-ingress
+  name: profile-ingress
+  namespace: events-demo
   annotations:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
     ingress.kubernetes.io/auth-type: forward
-    ingress.kubernetes.io/auth-url: http://events-demo-auth-api:13041/check
+    ingress.kubernetes.io/auth-url: http://auth-api:13041/check
     ingress.kubernetes.io/auth-response-headers: X-User-ID
 spec:
   rules:
@@ -47,6 +50,6 @@ spec:
       paths:
       - path: /api/profile
         backend:
-          serviceName: events-demo-profile
+          serviceName: profile
           servicePort: http
 

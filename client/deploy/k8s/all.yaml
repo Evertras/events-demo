@@ -2,38 +2,41 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: events-demo-client
+  name: client
+  namespace: events-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: events-demo-client
+      app: client
   template:
     metadata:
       labels:
-        app: events-demo-client
+        app: client
     spec:
       containers:
-      - name: events-demo-client-container
+      - name: client
         image: evertras/events-demo-client:latest
         imagePullPolicy: IfNotPresent
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: events-demo-client
+  name: client
+  namespace: events-demo
 spec:
   ports:
   - name: http
     targetPort: 80
     port: 80
   selector:
-    app: events-demo-client
+    app: client
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: events-demo-client-ingress
+  name: client-ingress
+  namespace: events-demo
   annotations:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
@@ -44,6 +47,6 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: events-demo-client
+          serviceName: client
           servicePort: http
 

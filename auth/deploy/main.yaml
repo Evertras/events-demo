@@ -2,38 +2,41 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: events-demo-auth-api
+  name: auth-api
+  namespace: events-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: events-demo-auth-api
+      app: auth-api
   template:
     metadata:
       labels:
-        app: events-demo-auth-api
+        app: auth-api
     spec:
       containers:
-      - name: events-demo-auth-container
+      - name: auth
         image: evertras/events-demo-auth:latest
         imagePullPolicy: IfNotPresent
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: events-demo-auth-api
+  name: auth-api
+  namespace: events-demo
 spec:
   ports:
   - name: http
     targetPort: 13041
     port: 13041
   selector:
-    app: events-demo-auth-api
+    app: auth-api
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: events-demo-auth-ingress
+  name: auth-ingress
+  namespace: events-demo
   annotations:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
@@ -44,25 +47,26 @@ spec:
       paths:
       - path: /api/auth
         backend:
-          serviceName: events-demo-auth-api
+          serviceName: auth-api
           servicePort: http
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: events-demo-auth-db
+  name: auth-db
+  namespace: events-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: events-demo-auth-db
+      app: auth-db
   template:
     metadata:
       labels:
-        app: events-demo-auth-db
+        app: auth-db
     spec:
       containers:
-      - name: events-demo-auth-db
+      - name: auth-db
         image: postgres:9.5-alpine
         imagePullPolicy: IfNotPresent
         env:
@@ -78,11 +82,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: events-demo-auth-db
+  name: auth-db
+  namespace: events-demo
 spec:
   ports:
   - name: db
     targetPort: 5432
     port: 5432
   selector:
-    app: events-demo-auth-db
+    app: auth-db

@@ -2,54 +2,57 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: events-demo-auth-db-adminer
+  name: auth-db-adminer
+  namespace: events-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: events-demo-auth-db-adminer
+      app: auth-db-adminer
   template:
     metadata:
       labels:
-        app: events-demo-auth-db-adminer
+        app: auth-db-adminer
     spec:
       containers:
-      - name: events-demo-auth-db-adminer
+      - name: adminer
         image: adminer:4.7
         imagePullPolicy: IfNotPresent
         env:
         - name: ADMINER_DEFAULT_DB_DRIVER
           value: PostgreSQL
         - name: ADMINER_DEFAULT_SERVER
-          value: events-demo-auth-db
+          value: auth-db
         - name: ADMINER_DESIGN
           value: price
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: events-demo-auth-db-adminer
+  name: auth-db-adminer
+  namespace: events-demo
 spec:
   ports:
   - name: http
     targetPort: 8080
     port: 8080
   selector:
-    app: events-demo-auth-db-adminer
+    app: auth-db-adminer
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: events-demo-auth-ingress-db-adminer
+  name: auth-ingress-db-adminer
+  namespace: events-demo
   annotations:
     kubernetes.io/ingress.class: traefik
 spec:
   rules:
-  - host: events-demo-auth-db-adminer.localhost
+  - host: auth-db-adminer.localhost
     http:
       paths:
       - path: /
         backend:
-          serviceName: events-demo-auth-db-adminer
+          serviceName: auth-db-adminer
           servicePort: http
 
