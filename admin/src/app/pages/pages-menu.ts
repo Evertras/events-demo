@@ -1,6 +1,7 @@
 import { NbMenuItem } from '@nebular/theme';
 
 export const MENU_ITEMS: NbMenuItem[] = [
+  /*
   {
     title: 'E-commerce',
     icon: 'shopping-cart-outline',
@@ -12,10 +13,20 @@ export const MENU_ITEMS: NbMenuItem[] = [
     icon: 'home-outline',
     link: '/pages/iot-dashboard',
   },
+  */
   {
-    title: 'Games',
-    icon: 'tv-outline',
-    link: '/pages/games',
+    title: 'Applications',
+    icon: 'browser-outline',
+    children: [
+      {
+        title: 'List',
+        link: '/pages/applications/list',
+      },
+      {
+        title: 'Create',
+        link: '/pages/applications/create',
+      },
+    ],
   },
   {
     title: 'Tests',
@@ -80,6 +91,7 @@ export const MENU_ITEMS: NbMenuItem[] = [
       },
     ],
   },
+  /*
   {
     title: 'UI Features',
     icon: 'keypad-outline',
@@ -213,6 +225,7 @@ export const MENU_ITEMS: NbMenuItem[] = [
       },
     ],
   },
+  */
   {
     title: 'Tables & Data',
     icon: 'grid-outline',
@@ -227,6 +240,7 @@ export const MENU_ITEMS: NbMenuItem[] = [
       },
     ],
   },
+  /*
   {
     title: 'Miscellaneous',
     icon: 'shuffle-2-outline',
@@ -259,4 +273,5 @@ export const MENU_ITEMS: NbMenuItem[] = [
       },
     ],
   },
+  */
 ];

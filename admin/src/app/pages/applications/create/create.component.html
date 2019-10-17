@@ -1,0 +1,49 @@
+<nb-card>
+  <nb-card-body>
+    <nb-stepper orientation="vertical">
+      <!--
+      <nb-step [stepControl]="infoForm" label="Information">
+        <h3>Application Information</h3>
+
+        <form [formGroup]="infoForm" (ngSubmit)="onInfoSubmit()" class="step-container">
+          <p>
+            Provide some basic information about your application.
+          </p>
+          <div class="form-group">
+            <label for="appName" class="label">Application Name</label>
+            <input
+              type="text"
+              placeholder="App Name"
+              class="form-control"
+              formControlName="nameCtrl"
+            >
+          </div>
+        </form>
+
+        <button nbButton disabled nbStepperPrevious>prev</button>
+        <button nbButton nbStepperNext>next</button>
+      </nb-step>
+      -->
+
+      <nb-step [stepControl]="variablesForm" label="Variables">
+        <h3>Application Variables</h3>
+        <p>
+          Define variables for your application.
+        </p>
+
+        <ngx-variables [variables]="variables"></ngx-variables>
+
+        <button nbButton nbStepperPrevious>prev</button>
+        <button nbButton nbStepperNext>next</button>
+      </nb-step>
+
+      <nb-step [stepControl]="confirmForm" label="Confirm">
+        <h3>Confirm</h3>
+        <p>Stuff here</p>
+        <button nbButton nbStepperPrevious>prev</button>
+        <button nbButton disabled nbStepperNext>next</button>
+      </nb-step>
+    </nb-stepper>
+  </nb-card-body>
+</nb-card>
+

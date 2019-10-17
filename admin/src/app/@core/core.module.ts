@@ -13,6 +13,7 @@ import {
 } from './utils';
 import { UserData } from './data/users';
 import { TestsData } from './data/tests';
+import { ApplicationsData } from './data/applications';
 import { ElectricityData } from './data/electricity';
 import { SmartTableData } from './data/smart-table';
 import { UserActivityData } from './data/user-activity';
@@ -52,6 +53,7 @@ import { CountryOrderService } from './mock/country-order.service';
 import { StatsProgressBarService } from './mock/stats-progress-bar.service';
 import { VisitorsAnalyticsService } from './mock/visitors-analytics.service';
 import { SecurityCamerasService } from './mock/security-cameras.service';
+import { ApplicationsService } from './mock/applications.service';
 import { MockDataModule } from './mock/mock-data.module';
 
 const socialLinks = [
@@ -93,6 +95,7 @@ const DATA_SERVICES = [
   { provide: VisitorsAnalyticsData, useClass: VisitorsAnalyticsService },
   { provide: SecurityCamerasData, useClass: SecurityCamerasService },
   { provide: TestsData, useClass: TestsService },
+  { provide: ApplicationsData, useClass: ApplicationsService },
 ];
 
 export class NbSimpleRoleProvider extends NbRoleProvider {
