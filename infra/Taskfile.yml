@@ -3,11 +3,11 @@ version: '2'
 tasks:
   install-local-traefik:
     cmds:
-      - helm install --namespace events-demo --name events-demo-traefik stable/traefik -f local/traefik/values.yaml
+      - helm install --namespace events-demo --name traefik stable/traefik -f local/traefik/values.yaml
 
   install-aws-traefik:
     cmds:
-      - helm install --name events-demo-traefik stable/traefik -f aws/traefik/values.yaml
+      - helm install --name traefik stable/traefik -f aws/traefik/values.yaml
 
   install-local-kafka:
     cmds:
