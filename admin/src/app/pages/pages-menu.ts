@@ -91,7 +91,6 @@ export const MENU_ITEMS: NbMenuItem[] = [
       },
     ],
   },
-  /*
   {
     title: 'UI Features',
     icon: 'keypad-outline',
@@ -115,6 +114,7 @@ export const MENU_ITEMS: NbMenuItem[] = [
       },
     ],
   },
+  /*
   {
     title: 'Modal & Overlays',
     icon: 'browser-outline',

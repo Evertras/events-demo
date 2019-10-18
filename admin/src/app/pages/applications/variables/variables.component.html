@@ -1,49 +1,50 @@
-<div class="addform">
-  <form [formGroup]="addForm">
-    <div class="form-group row">
-      <label for="addVarType" class="label col-sm-3 col-form-label">Type</label>
-      <div class="col-sm-9">
-        <nb-select formControlName="type" id="addVarType" (selectedChange)="resetDefault()">
-          <nb-option value="string">string</nb-option>
-          <nb-option value="int">int</nb-option>
-          <nb-option value="bool">bool</nb-option>
-        </nb-select>
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="addVarName" class="label col-sm-3 col-form-label">Name</label>
-      <div class="col-sm-9">
-        <input nbInput formControlName="name" type="text" id="addVarName" placeholder="Name" class="form-control">
-      </div>
-    </div>
-    <div class="form-group row">
-      <label for="addVarDefault" class="label col-sm-3 col-form-label">Default</label>
-      <div class="col-sm-9">
-        <div *ngIf="addForm.value.type === 'bool'; else defaultFreeform">
-          <nb-select formControlName="default" id="addVarDefaultBool">
-            <nb-option value="true">true</nb-option>
-            <nb-option value="false">false</nb-option>
+<div class="row">
+  <div class="addform colo-6">
+    <form [formGroup]="addForm">
+      <div class="form-group row">
+        <label for="addVarType" class="label col-3 col-form-label">Type</label>
+        <div class="col-9">
+          <nb-select formControlName="type" id="addVarType" (selectedChange)="resetDefault()">
+            <nb-option value="string">string</nb-option>
+            <nb-option value="int">int</nb-option>
+            <nb-option value="bool">bool</nb-option>
           </nb-select>
         </div>
-        <ng-template #defaultFreeform>
-          <input nbInput formControlName="default" type="text" id="addVarDefault" placeholder="Default Value" class="form-control">
-        </ng-template>
       </div>
-    </div>
-    <div class="row">
-      <div class="col-sm-3">
+      <div class="form-group row">
+        <label for="addVarName" class="label col-3 col-form-label">Name</label>
+        <div class="col-9">
+          <input nbInput formControlName="name" type="text" id="addVarName" placeholder="Name" class="form-control">
+        </div>
       </div>
-      <div class="col-sm-9">
-        <button nbButton hero status="primary" [disabled]="!addForm.valid" (click)="add()">
-          Add
-        </button>
+      <div class="form-group row">
+        <label for="addVarDefault" class="label col-3 col-form-label">Default</label>
+        <div class="col-9">
+          <div *ngIf="addForm.value.type === 'bool'; else defaultFreeform">
+            <nb-select formControlName="default" id="addVarDefaultBool">
+              <nb-option value="true">true</nb-option>
+              <nb-option value="false">false</nb-option>
+            </nb-select>
+          </div>
+          <ng-template #defaultFreeform>
+            <input nbInput formControlName="default" type="text" id="addVarDefault" placeholder="Default Value" class="form-control">
+          </ng-template>
+        </div>
       </div>
-    </div>
-  </form>
+      <div class="row">
+        <div class="col-3">
+        </div>
+        <div class="col-9">
+          <button nbButton hero status="primary" [disabled]="!addForm.valid" (click)="add()">
+            Add
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="col-6">
+    <ng2-smart-table [settings]="tableSettings" [source]="tableSource">
+    </ng2-smart-table>
+  </div>
 </div>
-<ul>
-  <li *ngFor="let variable of variables">
-    Name: {{variable.name}}
-  </li>
-</ul>
 

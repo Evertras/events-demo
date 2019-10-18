@@ -6,6 +6,7 @@ import { ApplicationsRoutingModule, routedComponents } from './applications-rout
 import {
   NbButtonModule,
   NbCardModule,
+  NbListModule,
   NbSelectModule,
   NbStepperModule,
 } from '@nebular/theme';
@@ -19,6 +20,7 @@ import { ThemeModule } from '../../@theme/theme.module';
     ReactiveFormsModule,
     NbButtonModule,
     NbCardModule,
+    NbListModule,
     NbSelectModule,
     NbStepperModule,
     Ng2SmartTableModule,

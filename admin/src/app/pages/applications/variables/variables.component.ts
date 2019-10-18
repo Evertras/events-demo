@@ -1,6 +1,7 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { IVariable } from '../../../@core/data/applications';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { LocalDataSource } from 'ng2-smart-table';
 
 @Component({
   selector: 'ngx-variables',
@@ -9,9 +10,43 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 })
 export class VariablesComponent implements OnInit {
 
-  @Input() variables: IVariable[];
+  @Output() variablesChanged = new EventEmitter();
 
   addForm: FormGroup;
+
+  tableSettings = {
+    hideSubHeader: true,
+    add: {
+      addButtonContent: '<i class="nb-plus"></i>',
+      createButtonContent: '<i class="nb-checkmark"></i>',
+      cancelButtonContent: '<i class="nb-close"></i>',
+    },
+    edit: {
+      editButtonContent: '<i class="nb-edit"></i>',
+      saveButtonContent: '<i class="nb-checkmark"></i>',
+      cancelButtonContent: '<i class="nb-close"></i>',
+    },
+    delete: {
+      deleteButtonContent: '<i class="nb-trash"></i>',
+    },
+    columns: {
+      name: {
+        title: 'Name',
+        type: 'string',
+      },
+      type: {
+        title: 'Type',
+        type: 'string',
+      },
+      value: {
+        title: 'Default',
+        type: 'string',
+      },
+    },
+    noDataMessage: 'No variables added yet',
+  };
+
+  tableSource: LocalDataSource = new LocalDataSource();
 
   constructor(
     private fb: FormBuilder,
@@ -21,12 +56,22 @@ export class VariablesComponent implements OnInit {
       default: ['', Validators.required],
       type: 'string',
     });
+
+    this.tableSource.onChanged().subscribe(() => this.variablesChanged.emit(this.tableSource.getAll()));
   }
 
   ngOnInit() {
   }
 
   add() {
+    this.tableSource.append({
+      name: this.addForm.value.name,
+      value: this.addForm.value.default,
+      type: this.addForm.value.type,
+    });
+
+    this.variablesChanged.emit(this.tableSource.getAll());
+
     this.addForm.reset({
       type: 'string',
     });
