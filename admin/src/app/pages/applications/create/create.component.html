@@ -31,7 +31,16 @@
           Define variables for your application.  You can change these later.
         </p>
 
-        <ngx-variables (variables)="variables"></ngx-variables>
+        <ngx-variables (variablesChanged)="varsChanged($event)"></ngx-variables>
+
+        <div>
+          Vars:
+          <ul>
+            <li *ngFor="let variable of variables">
+              {{variable.name}} ({{variable.type}}) = {{variable.value}}
+            </li>
+          </ul>
+        </div>
 
         <button nbButton nbStepperPrevious>prev</button>
         <button nbButton nbStepperNext>next</button>

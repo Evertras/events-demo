@@ -1,7 +1,7 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
-import { IVariable } from '../../../@core/data/applications';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { LocalDataSource } from 'ng2-smart-table';
+import { IVariable } from '../../../@core/data/applications';
 
 @Component({
   selector: 'ngx-variables',
@@ -10,7 +10,7 @@ import { LocalDataSource } from 'ng2-smart-table';
 })
 export class VariablesComponent implements OnInit {
 
-  @Output() variablesChanged = new EventEmitter();
+  @Output() variablesChanged = new EventEmitter<IVariable[]>();
 
   addForm: FormGroup;
 
@@ -37,6 +37,12 @@ export class VariablesComponent implements OnInit {
       type: {
         title: 'Type',
         type: 'string',
+        editor: {
+          type: 'list',
+          config: {
+            list: ['string', 'int', 'bool'].map(t => ({ title: t, value: t })),
+          },
+        },
       },
       value: {
         title: 'Default',
@@ -57,20 +63,22 @@ export class VariablesComponent implements OnInit {
       type: 'string',
     });
 
-    this.tableSource.onChanged().subscribe(() => this.variablesChanged.emit(this.tableSource.getAll()));
+    this.tableSource.onChanged().subscribe(
+      async () => this.variablesChanged.emit(await this.tableSource.getAll()),
+    );
   }
 
   ngOnInit() {
   }
 
-  add() {
+  async add() {
     this.tableSource.append({
       name: this.addForm.value.name,
       value: this.addForm.value.default,
       type: this.addForm.value.type,
     });
 
-    this.variablesChanged.emit(this.tableSource.getAll());
+    this.variablesChanged.emit(await this.tableSource.getAll());
 
     this.addForm.reset({
       type: 'string',

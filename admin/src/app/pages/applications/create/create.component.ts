@@ -10,13 +10,7 @@ import { IVariable } from '../../../@core/data/applications';
 export class CreateComponent implements OnInit {
 
   infoForm: FormGroup;
-  variables: IVariable[] = [
-    {
-      name: 'test1',
-      type: 'int',
-      value: 3,
-    },
-  ];
+  variables: IVariable[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -31,5 +25,9 @@ export class CreateComponent implements OnInit {
 
   onInfoSubmit() {
     this.infoForm.markAsDirty();
+  }
+
+  varsChanged(variables: IVariable[]) {
+    this.variables = variables;
   }
 }
