@@ -12,6 +12,7 @@ func New(addr string, db authdb.Db) *http.Server {
 
 	router.HandleFunc("/check", checkAuthHandler)
 	router.HandleFunc("/login", loginHandler(db))
+	router.HandleFunc("/register", registerHandler(db))
 
 	return &http.Server{
 		Addr:         addr,

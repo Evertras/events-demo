@@ -11,7 +11,7 @@ import (
 )
 
 type LoginBody struct {
-	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -21,6 +21,12 @@ type TokenResponse struct {
 
 func loginHandler(db authdb.Db) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			w.WriteHeader(400)
+			log.Println("Method must be POST")
+			return
+		}
+
 		body, err := ioutil.ReadAll(r.Body)
 
 		if err != nil {
@@ -38,7 +44,7 @@ func loginHandler(db authdb.Db) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		valid, err := db.ValidateUser(login.Username, login.Password)
+		valid, err := db.ValidateUser(login.Email, login.Password)
 
 		if err != nil {
 			w.WriteHeader(500)
@@ -48,11 +54,11 @@ func loginHandler(db authdb.Db) func(w http.ResponseWriter, r *http.Request) {
 
 		if !valid {
 			w.WriteHeader(400)
-			log.Println("Bad credentials for", login.Username)
+			log.Println("Bad credentials for", login.Email)
 			return
 		}
 
-		t, err := token.New(login.Username)
+		t, err := token.New(login.Email)
 
 		if err != nil {
 			w.WriteHeader(500)
@@ -60,7 +66,7 @@ func loginHandler(db authdb.Db) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resBody, err := json.Marshal(TokenResponse { Token: t })
+		resBody, err := json.Marshal(TokenResponse{Token: t})
 
 		if err != nil {
 			w.WriteHeader(500)
@@ -75,5 +81,7 @@ func loginHandler(db authdb.Db) func(w http.ResponseWriter, r *http.Request) {
 			log.Println("Failed to write body:", err)
 			return
 		}
+
+		log.Println("Login successful for " + login.Email)
 	}
 }

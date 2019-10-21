@@ -1,0 +1,52 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: admin
+  namespace: events-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin
+  template:
+    metadata:
+      labels:
+        app: admin
+    spec:
+      containers:
+      - name: admin
+        image: evertras/events-demo-admin:latest
+        imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin
+  namespace: events-demo
+spec:
+  ports:
+  - name: http
+    targetPort: 80
+    port: 80
+  selector:
+    app: admin
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: admin-ingress
+  namespace: events-demo
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
+spec:
+  rules:
+  - host: admin.localhost
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: admin
+          servicePort: http
+

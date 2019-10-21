@@ -1,8 +1,10 @@
 import { ModuleWithProviders, NgModule, Optional, SkipSelf } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NbAuthModule, NbDummyAuthStrategy } from '@nebular/auth';
+import { NbAuthModule, NbDummyAuthStrategy, NbPasswordAuthStrategy } from '@nebular/auth';
 import { NbSecurityModule, NbRoleProvider } from '@nebular/security';
 import { of as observableOf } from 'rxjs';
+
+import { environment } from '../../environments/environment';
 
 import { throwIfAlreadyLoaded } from './module-import-guard';
 import {
@@ -56,24 +58,6 @@ import { SecurityCamerasService } from './mock/security-cameras.service';
 import { ApplicationsService } from './mock/applications.service';
 import { MockDataModule } from './mock/mock-data.module';
 
-const socialLinks = [
-  {
-    url: 'https://github.com/akveo/nebular',
-    target: '_blank',
-    icon: 'github',
-  },
-  {
-    url: 'https://www.facebook.com/akveo/',
-    target: '_blank',
-    icon: 'facebook',
-  },
-  {
-    url: 'https://twitter.com/akveo_inc',
-    target: '_blank',
-    icon: 'twitter',
-  },
-];
-
 const DATA_SERVICES = [
   { provide: UserData, useClass: UserService },
   { provide: ElectricityData, useClass: ElectricityService },
@@ -105,23 +89,33 @@ export class NbSimpleRoleProvider extends NbRoleProvider {
   }
 }
 
+const authStrategy = environment.inMemory ?
+  NbDummyAuthStrategy.setup({
+    name: 'email',
+    delay: 1000,
+  }) :
+  NbPasswordAuthStrategy.setup({
+    name: 'email',
+    login: {
+      method: 'POST',
+    },
+    register: {
+      method: 'POST',
+    },
+  });
+
 export const NB_CORE_PROVIDERS = [
   ...MockDataModule.forRoot().providers,
   ...DATA_SERVICES,
   ...NbAuthModule.forRoot({
 
     strategies: [
-      NbDummyAuthStrategy.setup({
-        name: 'email',
-        delay: 3000,
-      }),
+      authStrategy,
     ],
     forms: {
       login: {
-        socialLinks: socialLinks,
       },
       register: {
-        socialLinks: socialLinks,
       },
     },
   }).providers,

@@ -24,7 +24,7 @@ func checkAuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("X-User-ID", claim.Username)
+	w.Header().Set("X-User-ID", claim.Email)
 
 	w.WriteHeader(200)
 }

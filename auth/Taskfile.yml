@@ -5,6 +5,10 @@ tasks:
     cmds:
       - telepresence --docker-run --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
 
+  inject:
+    cmds:
+      - telepresence --swap-deployment auth-api --expose 13041 --docker-run --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
+
   build:
     cmds:
       - docker build -t evertras/events-demo-auth .
@@ -14,6 +18,8 @@ tasks:
       - go test -v ./lib/...
 
   install-local:
+    deps:
+      - build
     cmds:
       - kubectl apply -f deploy/main.yaml
       - kubectl apply -f deploy/adminer.yaml
@@ -22,4 +28,11 @@ tasks:
     cmds:
       - kubectl delete -f deploy/main.yaml
       - kubectl delete -f deploy/adminer.yaml
+
+  update-local:
+    deps:
+      - build
+    cmds:
+      - kubectl scale deployment.v1.apps/auth-api --replicas=0
+      - kubectl scale deployment.v1.apps/auth-api --replicas=1
 

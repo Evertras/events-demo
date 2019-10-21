@@ -51,6 +51,24 @@ spec:
           servicePort: http
 ---
 apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: auth-ingress-admin
+  namespace: events-demo
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
+spec:
+  rules:
+  - host: admin.localhost
+    http:
+      paths:
+      - path: /api/auth
+        backend:
+          serviceName: auth-api
+          servicePort: http
+---
+apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: auth-db

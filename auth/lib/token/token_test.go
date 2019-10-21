@@ -21,7 +21,7 @@ func TestTokenCreatesAndParses(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if parsed.Username != testUser {
-		t.Fatalf("Expected username %q but got %q", testUser, parsed.Username)
+	if parsed.Email != testUser {
+		t.Fatalf("Expected username %q but got %q", testUser, parsed.Email)
 	}
 }
