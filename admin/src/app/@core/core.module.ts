@@ -116,6 +116,7 @@ export const NB_CORE_PROVIDERS = [
       login: {
       },
       register: {
+        terms: false,
       },
     },
   }).providers,
