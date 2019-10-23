@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Evertras/events-demo/auth/lib/authdb"
+	"github.com/Evertras/events-demo/auth/lib/auth"
 	"github.com/Evertras/events-demo/auth/lib/token"
 )
 
@@ -15,7 +15,7 @@ type RegisterBody struct {
 	Password string `json:"password"`
 }
 
-func registerHandler(db authdb.Db) func(w http.ResponseWriter, r *http.Request) {
+func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
 			w.WriteHeader(400)
@@ -40,15 +40,22 @@ func registerHandler(db authdb.Db) func(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		_, err = db.RegisterUser(login.Email, login.Password)
+		meta := auth.RegistrationMeta{}
+
+		err = a.Register(login.Email, login.Password, meta)
 
 		if err != nil {
+			if err == auth.ErrUserAlreadyExists {
+				w.WriteHeader(400)
+				log.Println("User already exists:", login.Email)
+				return
+			}
 			w.WriteHeader(500)
 			log.Println("Failed to register user:", err)
 			return
 		}
 
-		valid, err := db.ValidateUser(login.Email, login.Password)
+		valid, err := a.Validate(login.Email, login.Password)
 
 		if !valid {
 			w.WriteHeader(400)

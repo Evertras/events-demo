@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/Evertras/events-demo/auth/lib/auth"
 	"github.com/Evertras/events-demo/auth/lib/authdb"
 	"github.com/Evertras/events-demo/auth/lib/server"
 )
@@ -15,7 +16,9 @@ func main() {
 
 	db := initDb()
 
-	server := server.New(addr, db)
+	a := auth.New(db)
+
+	server := server.New(addr, a)
 
 	log.Println("Serving", addr)
 

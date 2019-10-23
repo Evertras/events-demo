@@ -3,6 +3,7 @@ module github.com/Evertras/events-demo/auth
 go 1.13
 
 require (
+	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/lib/pq v1.2.0
