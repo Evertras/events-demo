@@ -11,7 +11,7 @@ tasks:
 
   install-local-kafka:
     cmds:
-      - helm install --name events-demo-kafka ./cp-helm-charts -f ./local/kafka/cp-helm-config.yaml
+      - helm install --name kafka ./cp-helm-charts -f ./local/kafka/cp-helm-config.yaml
       - kubectl apply -f ./local/kafka/control-center-ingress.yaml
 
   install-local-logging:
@@ -23,16 +23,16 @@ tasks:
 
   delete-local-kafka:
     cmds:
-      - helm delete --purge events-demo-kafka
+      - helm delete --purge kafka
       - kubectl delete -f ./local/kafka/control-center-ingress.yaml
 
   delete-local-traefik:
     cmds:
-      - helm delete --purge events-demo-traefik
+      - helm delete --purge traefik
 
   delete-aws-traefik:
     cmds:
-      - helm delete --purge events-demo-traefik
+      - helm delete --purge traefik
 
   delete-local-logging:
     cmds:

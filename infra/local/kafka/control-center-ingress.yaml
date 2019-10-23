@@ -12,6 +12,6 @@ spec:
       paths:
         - path: /
           backend:
-            serviceName: events-demo-kafka-cp-control-center
+            serviceName: kafka-cp-control-center
             servicePort: cc-http
 
