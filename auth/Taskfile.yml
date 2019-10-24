@@ -1,6 +1,14 @@
 version: '2'
 
 tasks:
+  avro:
+    sources:
+      - schemas/avro/*.avsc
+    generates:
+      - lib/eventstream/events/*.go
+    cmds:
+      - gogen-avro --package events lib/eventstream/events/ .schemas/avro/*.avsc
+
   dev:
     cmds:
       - telepresence --docker-run --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
@@ -10,10 +18,14 @@ tasks:
       - telepresence --swap-deployment auth-api --expose 13041 --docker-run --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
 
   build:
+    deps:
+      - avro
     cmds:
       - docker build -t evertras/events-demo-auth .
 
   test:
+    deps:
+      - avro
     cmds:
       - go test -v ./lib/...
 

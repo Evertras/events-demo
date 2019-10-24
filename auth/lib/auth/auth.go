@@ -7,6 +7,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Evertras/events-demo/auth/lib/authdb"
+	"github.com/Evertras/events-demo/auth/lib/eventstream"
+	"github.com/Evertras/events-demo/auth/lib/eventstream/events"
 )
 
 var ErrUserAlreadyExists = errors.New("user already exists")
@@ -15,7 +17,7 @@ var ErrUserAlreadyExists = errors.New("user already exists")
 // doesn't necessarily care about.  However, we still want to be
 // explicit about the schema for type safety.
 type RegistrationMeta struct {
-	username string
+	Username string
 }
 
 // Auth performs auth operations and updates an underlying data store and event stream
@@ -33,11 +35,13 @@ type Auth interface {
 
 type auth struct {
 	db authdb.Db
+	es eventstream.EventStream
 }
 
-func New(db authdb.Db) Auth {
+func New(db authdb.Db, es eventstream.EventStream) Auth {
 	return &auth{
 		db: db,
+		es: es,
 	}
 }
 
@@ -60,8 +64,8 @@ func (a *auth) Register(email string, password string, details RegistrationMeta)
 	}
 
 	entry := authdb.UserEntry{
-		ID:           uuid.New().String(),
-		Email:        email,
+		ID:                   uuid.New().String(),
+		Email:                email,
 		PasswordHashWithSalt: string(hash),
 	}
 
@@ -71,7 +75,13 @@ func (a *auth) Register(email string, password string, details RegistrationMeta)
 		return errors.Wrap(err, "unable to create user")
 	}
 
-	// TODO: Event stream
+	ev := events.NewUserRegistered()
+
+	ev.ID = entry.ID
+	ev.Email = entry.Email
+	ev.Username = details.Username
+
+	a.es.PostRegisteredEvent(ev)
 
 	return nil
 }

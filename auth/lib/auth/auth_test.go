@@ -4,15 +4,22 @@ import (
 	"testing"
 
 	"github.com/Evertras/events-demo/auth/lib/authdb/mockauthdb"
+	"github.com/Evertras/events-demo/auth/lib/eventstream/mockeventstream"
+	"github.com/Evertras/events-demo/auth/lib/eventstream/events"
 )
 
 func TestRegisterUser(t *testing.T) {
 	db := mockauthdb.New()
-	a := New(db)
+	stream := mockeventstream.New()
+
+	a := New(db, stream)
 
 	email := "test@testing.com"
 	password := "sekrit"
-	details := RegistrationMeta{}
+	username := "some-user"
+	details := RegistrationMeta{
+		Username: username,
+	}
 
 	err := a.Register(email, password, details)
 
@@ -24,7 +31,6 @@ func TestRegisterUser(t *testing.T) {
 
 	if !exists {
 		t.Fatal("Entry not found in DB")
-		return
 	}
 
 	testCases := []struct{
@@ -44,6 +50,32 @@ func TestRegisterUser(t *testing.T) {
 			f: func(t *testing.T) {
 				if len(entry.ID) == 0 {
 					t.Error("ID not generated")
+				}
+			},
+		},
+		{
+			name: "RegisteredEventSent",
+			f: func(t *testing.T) {
+				if len(stream.Sent) != 1 {
+					t.Fatalf("Expected 1 event sent, but found %d", len(stream.Sent))
+				}
+
+				ev := stream.Sent[0].(*events.UserRegistered)
+
+				if ev == nil {
+					t.Fatal("Expected events.UserRegistered but did not cast correctly")
+				}
+
+				if ev.ID != entry.ID {
+					t.Errorf("Did not send correct ID: expected %q but got %q", entry.ID, ev.ID)
+				}
+
+				if ev.Email != email {
+					t.Errorf("Did not send correct user email: expected %q but got %q", email, ev.Email)
+				}
+
+				if ev.Username != username {
+					t.Errorf("Did not send correct username: expected %q but got %q", username, ev.Username)
 				}
 			},
 		},
