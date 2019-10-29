@@ -102,7 +102,5 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			log.Println("Failed to write body:", err)
 			return
 		}
-
-		log.Println("Registration successful for " + login.Email)
 	}
 }

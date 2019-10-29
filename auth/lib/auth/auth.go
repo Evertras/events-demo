@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -74,11 +73,7 @@ func (a *auth) Register(ctx context.Context, email string, password string) (Use
 	errs := make(chan error)
 
 	go func() {
-		log.Println("waiting...")
-
 		err := a.db.WaitForCreateUser(ctx, email)
-
-		log.Println("ok")
 
 		if err != nil {
 			errs <- err
@@ -94,11 +89,7 @@ func (a *auth) Register(ctx context.Context, email string, password string) (Use
 	ev.PasswordHash = string(hash)
 	ev.TimeUnixMs = time.Now().Unix()
 
-	log.Println("sending event")
-
 	err = a.streamWriter.PostRegisteredEvent(ctx, ev)
-
-	log.Println("event sent")
 
 	if err != nil {
 		return "", err
