@@ -2,13 +2,18 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"log"
+
+	"github.com/google/uuid"
 
 	"github.com/Evertras/events-demo/auth/lib/auth"
 	"github.com/Evertras/events-demo/auth/lib/authdb"
 	"github.com/Evertras/events-demo/auth/lib/eventprocessor"
 	"github.com/Evertras/events-demo/auth/lib/server"
 	"github.com/Evertras/events-demo/auth/lib/stream"
+	"github.com/Evertras/events-demo/auth/lib/token"
 )
 
 const headerAuthToken = "X-Auth-Token"
@@ -21,13 +26,20 @@ func main() {
 
 	db := initDb()
 
-	consumerGroupID, err := db.GetSharedID("auth.consumerGroupID")
+	randomID := uuid.New().String()
+	consumerGroupID, err := db.GetSharedValue("auth.consumerGroupID", randomID)
 
 	if err != nil {
-		log.Fatal("Failed getting consumer group ID", err)
+		log.Fatal("Failed getting consumer group ID:", err)
 	}
 
 	log.Println("Using consumer group ID", consumerGroupID)
+
+	err = initSignKey(db)
+
+	if err != nil {
+		log.Fatal("Failed to initialize token sign key:", err)
+	}
 
 	writer := initStreamWriter()
 	reader := initStreamReader(consumerGroupID)
@@ -89,4 +101,22 @@ func initStreamWriter() stream.Writer {
 
 func initStreamReader(groupId string) stream.Reader {
 	return stream.NewKafkaStreamReader([]string{kafkaBrokers}, groupId)
+}
+
+func initSignKey(db authdb.Db) error {
+	buf := make([]byte, 128)
+
+	rand.Reader.Read(buf)
+
+	randomSignKey := base64.StdEncoding.EncodeToString(buf)
+
+	tokenSignKey, err := db.GetSharedValue("auth.token.signKey", randomSignKey)
+
+	if err != nil {
+		return err
+	}
+
+	token.SignKey, err = base64.StdEncoding.DecodeString(tokenSignKey)
+
+	return err
 }

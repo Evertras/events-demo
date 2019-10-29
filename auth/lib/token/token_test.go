@@ -5,6 +5,8 @@ import "testing"
 const testUser = "testUser"
 
 func TestTokenCreatesAndParses(t *testing.T) {
+	SignKey = []byte("abcdefkey")
+
 	token, err := New(testUser)
 
 	if err != nil {

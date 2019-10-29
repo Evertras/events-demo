@@ -89,3 +89,13 @@ Kafka as a single atomic operation is a recipe for enormous headaches.
 
 Whether this is all worth the complexity is another question...
 
+## Seriously this isn't secure
+
+Redis is wide open for anyone to connect/modify.  The JWT sign token is randomly generated,
+but its value is stored in the totally insecure Redis instance.  Kafka is unencrypted.  No ACLs
+are in place.  Don't use this in prod for anything.
+
+An additional concern is storing the hashed passwords in the event store where other services
+can potentially read them.  How dangerous is this, actually?  If the hash is properly done,
+do we even care?  An open question for debate!
+

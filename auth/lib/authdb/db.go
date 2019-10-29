@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/bsm/redislock"
@@ -40,9 +39,9 @@ type Db interface {
 	// Returns an error if something unexpected goes wrong.
 	GetUserByEmail(email string) (*UserEntry, error)
 
-	// GetSharedID returns a stored string ID, or, if it does not exist,
-	// creates a random ID, stores it in the DB, and returns it
-	GetSharedID(key string) (string, error)
+	// GetSharedValue returns a stored value; if it does not exist,
+	// it will atomically store the given value and return that.
+	GetSharedValue(key string, ifNotExist string) (string, error)
 
 	// WaitForCreateUser will wait for the user to be created
 	// in the database before returning, or an error if the user
@@ -146,9 +145,7 @@ func credsKey(email string) string {
 	return "creds:" + email
 }
 
-func (d *db) GetSharedID(key string) (string, error) {
-	randomID := uuid.New().String()
-
+func (d *db) GetSharedValue(key string, ifNotExist string) (string, error) {
 	locker := redislock.New(d.db)
 
 	lockKey := key + ".lock"
@@ -165,7 +162,7 @@ func (d *db) GetSharedID(key string) (string, error) {
 
 	defer lock.Release()
 
-	d.db.SetNX(key, randomID, 0)
+	d.db.SetNX(key, ifNotExist, 0)
 
 	actualID, err := d.db.Get(key).Result()
 

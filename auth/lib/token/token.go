@@ -6,8 +6,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-// TODO: THIS IS HILARIOUSLY INSECURE, make this a secret somewhere
-var signKey = []byte("super sekrit key")
+var SignKey []byte
 
 // TODO: make this config
 const tokenDuration = time.Hour * 10
@@ -30,14 +29,14 @@ func New(email string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 
-	return token.SignedString(signKey)
+	return token.SignedString(SignKey)
 }
 
 func Parse(token string) (*Claim, error) {
 	claims := &Claim{}
 
 	t, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		return signKey, nil
+		return SignKey, nil
 	})
 
 	if err != nil {

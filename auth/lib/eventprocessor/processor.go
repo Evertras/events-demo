@@ -3,6 +3,7 @@ package eventprocessor
 import (
 	"bytes"
 	"context"
+	"log"
 
 	"github.com/pkg/errors"
 
@@ -38,6 +39,8 @@ func (p *processor) Run(ctx context.Context) error {
 		if ev == nil {
 			return errors.New("nil deserialized registration event")
 		}
+
+		log.Println("Got registered event for", ev.Email)
 
 		err = p.db.CreateUser(authdb.UserEntry{
 			ID:                   ev.ID,
