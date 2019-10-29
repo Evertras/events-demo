@@ -91,7 +91,7 @@ Whether this is all worth the complexity is another question...
 
 ## Seriously this isn't secure
 
-Redis is wide open for anyone to connect/modify.  The JWT sign token is randomly generated,
+Redis is wide open for anyone to connect/modify.  The JWT sign key is randomly generated,
 but its value is stored in the totally insecure Redis instance.  Kafka is unencrypted.  No ACLs
 are in place.  Don't use this in prod for anything.
 
