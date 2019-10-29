@@ -104,7 +104,7 @@ func initStreamReader(groupId string) stream.Reader {
 }
 
 func initSignKey(db authdb.Db) error {
-	buf := make([]byte, 128)
+	buf := make([]byte, 1024)
 
 	rand.Reader.Read(buf)
 
