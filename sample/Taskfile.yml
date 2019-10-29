@@ -10,6 +10,8 @@ tasks:
       - docker build -t evertras/events-demo-sample .
 
   install-local:
+    deps:
+      - build
     cmds:
       - kubectl apply -f deploy/all.yaml
 
