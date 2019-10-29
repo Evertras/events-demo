@@ -13,3 +13,5 @@ TOKEN=$(echo "${RESPONSE}" | jq -r '.token')
 
 echo "Token:    ${TOKEN}"
 
+export TOKEN
+
