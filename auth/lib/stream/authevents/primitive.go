@@ -4,7 +4,7 @@
  *     userRegistered.avsc
  */
 
-package events
+package authevents
 
 import (
 	"github.com/actgardner/gogen-avro/compiler"
@@ -102,11 +102,15 @@ func writeUserRegistered(r *UserRegistered, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+	err = writeLong(r.TimeUnixMs, w)
+	if err != nil {
+		return err
+	}
 	err = writeString(r.Email, w)
 	if err != nil {
 		return err
 	}
-	err = writeString(r.Username, w)
+	err = writeString(r.PasswordHash, w)
 	if err != nil {
 		return err
 	}

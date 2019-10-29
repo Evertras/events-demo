@@ -1,29 +1,27 @@
 package auth
 
 import (
+	"context"
+	"time"
+
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/Evertras/events-demo/auth/lib/authdb"
-	"github.com/Evertras/events-demo/auth/lib/eventstream"
-	"github.com/Evertras/events-demo/auth/lib/eventstream/events"
+	"github.com/Evertras/events-demo/auth/lib/stream"
+	"github.com/Evertras/events-demo/auth/lib/stream/authevents"
 )
+
+type UserID string
 
 var ErrUserAlreadyExists = errors.New("user already exists")
 
-// RegistrationMeta contains metadata about the user that auth
-// doesn't necessarily care about.  However, we still want to be
-// explicit about the schema for type safety.
-type RegistrationMeta struct {
-	Username string
-}
-
 // Auth performs auth operations and updates an underlying data store and event stream
 type Auth interface {
-	// Register adds a new user and creates a registration event
-	Register(email string, password string, details RegistrationMeta) error
+	// Register creates a UserRegistered event and waits for the user to be added
+	Register(ctx context.Context, email string, password string) (UserID, error)
 
 	// Validate checks if the email and password are correct.
 	//
@@ -34,56 +32,81 @@ type Auth interface {
 }
 
 type auth struct {
-	db authdb.Db
-	es eventstream.EventStream
+	db           authdb.Db
+	streamWriter stream.Writer
 }
 
-func New(db authdb.Db, es eventstream.EventStream) Auth {
-	return &auth{
-		db: db,
-		es: es,
+func New(db authdb.Db, streamWriter stream.Writer) Auth {
+	a := &auth{
+		db:           db,
+		streamWriter: streamWriter,
 	}
+
+	return a
 }
 
-func (a *auth) Register(email string, password string, details RegistrationMeta) error {
+func (a *auth) Register(ctx context.Context, email string, password string) (UserID, error) {
+	// Note that this is a best-effort sanity check; if two register commands are
+	// sent quickly back to back, this will NOT stop multiple events from being
+	// created, and that's okay.  We need to cleanly handle multiple register events
+	// later on in the process.  It's still good to filter what we can at this point.
 	exists, err := a.db.GetUserByEmail(email)
 
 	if err != nil {
-		return errors.Wrap(err, "failed to check for existing user")
+		return "", errors.Wrap(err, "failed to check for existing user")
 	}
 
 	if exists != nil {
-		return ErrUserAlreadyExists
+		return "", ErrUserAlreadyExists
 	}
 
 	// bcrypt package takes care of salting for us
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
 	if err != nil {
-		return errors.Wrap(err, "unable to hash password")
+		return "", errors.Wrap(err, "unable to hash password")
 	}
 
-	entry := authdb.UserEntry{
-		ID:                   uuid.New().String(),
-		Email:                email,
-		PasswordHashWithSalt: string(hash),
-	}
+	id := uuid.New().String()
 
-	err = a.db.CreateUser(entry)
+	done := make(chan bool)
+	errs := make(chan error)
+
+	go func() {
+		err := a.db.WaitForCreateUser(ctx, email)
+
+		if err != nil {
+			errs <- err
+		} else {
+			done <- true
+		}
+	}()
+
+	ev := authevents.NewUserRegistered()
+
+	ev.ID = id
+	ev.Email = email
+	ev.PasswordHash = string(hash)
+	ev.TimeUnixMs = time.Now().Unix()
+
+	err = a.streamWriter.PostRegisteredEvent(ctx, ev)
 
 	if err != nil {
-		return errors.Wrap(err, "unable to create user")
+		return "", err
 	}
 
-	ev := events.NewUserRegistered()
+	select {
+	case <-done:
+		break
 
-	ev.ID = entry.ID
-	ev.Email = entry.Email
-	ev.Username = details.Username
+	case <-errs:
+		return "", errors.Wrap(err, "failed to find registered event")
 
-	a.es.PostRegisteredEvent(ev)
+	case <-ctx.Done():
+		return "", errors.New("context ended")
+	}
 
-	return nil
+	return UserID(id), nil
 }
 
 func (a *auth) Validate(email string, password string) (bool, error) {

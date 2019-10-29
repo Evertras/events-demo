@@ -5,9 +5,10 @@ tasks:
     sources:
       - schemas/avro/*.avsc
     generates:
-      - lib/eventstream/events/*.go
+      - lib/stream/authevents/*.go
     cmds:
-      - gogen-avro --package events lib/eventstream/events/ .schemas/avro/*.avsc
+      - mkdir -p lib/stream/authevents/
+      - gogen-avro --package authevents lib/stream/authevents/ ./schemas/avro/*.avsc
 
   dev:
     cmds:
@@ -23,6 +24,11 @@ tasks:
     cmds:
       - docker build -t evertras/events-demo-auth .
 
+  build-redis:
+    dir: deploy/redis
+    cmds:
+      - docker build -t evertras/events-demo-auth-redis .
+
   test:
     deps:
       - avro
@@ -32,19 +38,20 @@ tasks:
   install-local:
     deps:
       - build
+      - build-redis
     cmds:
       - kubectl apply -f deploy/main.yaml
-      - kubectl apply -f deploy/adminer.yaml
+      - kubectl apply -f deploy/redis-commander.yaml
 
   delete-local:
     cmds:
       - kubectl delete -f deploy/main.yaml
-      - kubectl delete -f deploy/adminer.yaml
+      - kubectl delete -f deploy/redis-commander.yaml
 
   update-local:
     deps:
       - build
     cmds:
       - kubectl scale deployment.v1.apps/auth-api --replicas=0
-      - kubectl scale deployment.v1.apps/auth-api --replicas=1
+      - kubectl scale deployment.v1.apps/auth-api --replicas=2
 

@@ -2,57 +2,53 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: auth-db-adminer
+  name: auth-db-redis-commander
   namespace: events-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: auth-db-adminer
+      app: auth-db-redis-commander
   template:
     metadata:
       labels:
-        app: auth-db-adminer
+        app: auth-db-redis-commander
     spec:
       containers:
-      - name: adminer
-        image: adminer:4.7
+      - name: redis-commander
+        image: rediscommander/redis-commander:latest
         imagePullPolicy: IfNotPresent
         env:
-        - name: ADMINER_DEFAULT_DB_DRIVER
-          value: PostgreSQL
-        - name: ADMINER_DEFAULT_SERVER
-          value: auth-db
-        - name: ADMINER_DESIGN
-          value: price
+        - name: REDIS_HOSTS
+          value: main:auth-db:6379
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-db-adminer
+  name: auth-db-redis-commander
   namespace: events-demo
 spec:
   ports:
   - name: http
-    targetPort: 8080
-    port: 8080
+    targetPort: 8081
+    port: 8081
   selector:
-    app: auth-db-adminer
+    app: auth-db-redis-commander
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: auth-ingress-db-adminer
+  name: auth-ingress-db-redis-commander
   namespace: events-demo
   annotations:
     kubernetes.io/ingress.class: traefik
 spec:
   rules:
-  - host: auth-db-adminer.localhost
+  - host: auth-db-redis-commander.localhost
     http:
       paths:
       - path: /
         backend:
-          serviceName: auth-db-adminer
+          serviceName: auth-db-redis-commander
           servicePort: http
 

@@ -11,7 +11,7 @@ import (
 )
 
 type RegisterBody struct {
-	Email    string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -40,9 +40,19 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		meta := auth.RegistrationMeta{}
+		if login.Email == "" {
+			w.WriteHeader(400)
+			log.Println("Missing email address")
+			return
+		}
 
-		err = a.Register(login.Email, login.Password, meta)
+		if login.Password == "" {
+			w.WriteHeader(400)
+			log.Println("Missing password")
+			return
+		}
+
+		_, err = a.Register(r.Context(), login.Email, login.Password)
 
 		if err != nil {
 			if err == auth.ErrUserAlreadyExists {
@@ -57,9 +67,15 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 
 		valid, err := a.Validate(login.Email, login.Password)
 
+		if err != nil {
+			w.WriteHeader(500)
+			log.Println("Failed to validate:", err)
+			return
+		}
+
 		if !valid {
 			w.WriteHeader(400)
-			log.Println("Bad credentials for", login.Email)
+			log.Println("Failed to validate credentials for", login.Email)
 			return
 		}
 

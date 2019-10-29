@@ -1,20 +1,24 @@
 package authdb
 
 import (
-	"database/sql"
-	"github.com/pkg/errors"
-	"fmt"
+	"context"
+	"encoding/json"
+	"time"
 
-	_ "github.com/lib/pq"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
+
+	"github.com/bsm/redislock"
+	"github.com/go-redis/redis"
 )
 
 // UserEntry is a single row in the database
 type UserEntry struct {
 	// ID is some uniquely generated identifier attached to the user
-	ID           string
+	ID string
 
 	// Email is the user's email address
-	Email        string
+	Email string
 
 	// PasswordHash is the hashed/salted password that will be used
 	// for comparison/validation
@@ -29,27 +33,30 @@ type Db interface {
 	// Ping pings the database to check connectivity
 	Ping() error
 
-	// MigrateToLatest checks the current database version
-	// and performs any necessary migration scripts
-	MigrateToLatest() error
-
 	// CreateUser creates a user in the database
 	CreateUser(entry UserEntry) error
 
 	// GetUserByEmail returns the user's entry or nil if not found.
 	// Returns an error if something unexpected goes wrong.
 	GetUserByEmail(email string) (*UserEntry, error)
+
+	// GetSharedID returns a stored string ID, or, if it does not exist,
+	// creates a random ID, stores it in the DB, and returns it
+	GetSharedID(key string) (string, error)
+
+	// WaitForCreateUser will wait for the user to be created
+	// in the database before returning, or an error if the user
+	// was not seen as added before the context cancels
+	WaitForCreateUser(ctx context.Context, email string) error
 }
 
 type db struct {
-	db   *sql.DB
+	db   *redis.Client
 	opts ConnectionOptions
 }
 
 type ConnectionOptions struct {
-	User     string
-	Password string
-	Address  string
+	Address string
 }
 
 func New(opts ConnectionOptions) Db {
@@ -60,13 +67,13 @@ func New(opts ConnectionOptions) Db {
 }
 
 func (d *db) Connect() error {
-	var err error
+	d.db = redis.NewClient(&redis.Options{
+		Addr:     d.opts.Address,
+		Password: "",
+		DB:       0,
+	})
 
-	connStr := fmt.Sprintf("postgres://%s:%s@%s/auth?sslmode=disable", d.opts.User, d.opts.Password, d.opts.Address)
-
-	d.db, err = sql.Open("postgres", connStr)
-
-	return err
+	return d.Ping()
 }
 
 func (d *db) Ping() error {
@@ -74,53 +81,93 @@ func (d *db) Ping() error {
 		return errors.New("db not connected")
 	}
 
-	return d.db.Ping()
+	return d.db.Ping().Err()
 }
 
 func (d *db) CreateUser(entry UserEntry) error {
-	tx, err := d.db.Begin()
-
-	if err != nil {
-		return errors.Wrap(err, "could not create transaction")
+	if entry.Email == "" {
+		return errors.New("must supply email")
 	}
 
-	_, err = tx.Exec(`
-INSERT INTO users (id, email, hash)
-VALUES ($1, $2, $3)
-`,
-		entry.ID, entry.Email, entry.PasswordHashWithSalt)
+	val, err := json.Marshal(entry)
 
 	if err != nil {
-		return errors.Wrap(err, "insert query failed")
+		return errors.Wrap(err, "failed to marshal to JSON")
 	}
 
-	err = tx.Commit()
+	err = d.db.Set(credsKey(entry.Email), val, 0).Err()
+
+	return err
+}
+
+func (d *db) WaitForCreateUser(ctx context.Context, email string) error {
+	ps := d.db.PSubscribe("__keyspace@*__:creds:" + email)
+
+	_, err := ps.Receive()
 
 	if err != nil {
-		return errors.Wrap(err, "failed to commit transaction")
+		return err
 	}
 
-	return nil
+	defer ps.Close()
+
+	select {
+	case <-ps.Channel():
+		return nil
+
+	case <-ctx.Done():
+		return errors.New("context finished before message received")
+	}
 }
 
 func (d *db) GetUserByEmail(email string) (*UserEntry, error) {
-	row := d.db.QueryRow(`
-SELECT id, email, hash
-FROM users
-WHERE email = $1
-`, email)
-
 	entry := &UserEntry{}
 
-	err := row.Scan(&entry.ID, &entry.Email, &entry.PasswordHashWithSalt)
+	raw, err := d.db.Get(credsKey(email)).Result()
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == redis.Nil {
 			return nil, nil
 		}
 
-		return nil, errors.Wrap(err, "unexpected error when scanning row")
+		return nil, errors.Wrap(err, "failed to get key")
+	}
+
+	err = json.Unmarshal([]byte(raw), entry)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "found key but could not unmarshal json")
 	}
 
 	return entry, nil
+}
+
+func credsKey(email string) string {
+	return "creds:" + email
+}
+
+func (d *db) GetSharedID(key string) (string, error) {
+	randomID := uuid.New().String()
+
+	locker := redislock.New(d.db)
+
+	lockKey := key + ".lock"
+
+	lock, err := locker.Obtain(
+		lockKey,
+		50*time.Millisecond,
+		nil,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	defer lock.Release()
+
+	d.db.SetNX(key, randomID, 0)
+
+	actualID, err := d.db.Get(key).Result()
+
+	return actualID, err
 }

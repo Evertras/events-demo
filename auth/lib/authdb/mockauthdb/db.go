@@ -1,6 +1,9 @@
 package mockauthdb
 
 import (
+	"context"
+	"time"
+
 	"github.com/pkg/errors"
 
 	"github.com/Evertras/events-demo/auth/lib/authdb"
@@ -10,7 +13,9 @@ type MockDb struct {
 	Connected bool
 
 	EntriesByEmail map[string]*authdb.UserEntry
-	EntriesByID map[string]*authdb.UserEntry
+	EntriesByID    map[string]*authdb.UserEntry
+
+	CreateUserTimeout time.Duration
 }
 
 // Ensure it meets interface
@@ -18,9 +23,10 @@ var _ authdb.Db = &MockDb{}
 
 func New() *MockDb {
 	return &MockDb{
-		Connected: false,
-		EntriesByEmail:   make(map[string]*authdb.UserEntry),
-		EntriesByID:   make(map[string]*authdb.UserEntry),
+		Connected:      false,
+		EntriesByEmail: make(map[string]*authdb.UserEntry),
+		EntriesByID:    make(map[string]*authdb.UserEntry),
+		CreateUserTimeout: time.Millisecond,
 	}
 }
 
@@ -34,10 +40,6 @@ func (db *MockDb) Ping() error {
 	return nil
 }
 
-func (db *MockDb) MigrateToLatest() error {
-	return nil
-}
-
 func (db *MockDb) CreateUser(entry authdb.UserEntry) error {
 	if _, exists := db.EntriesByEmail[entry.Email]; exists {
 		return errors.New("email already exists")
@@ -47,9 +49,9 @@ func (db *MockDb) CreateUser(entry authdb.UserEntry) error {
 		return errors.New("id already exists")
 	}
 
-	e := &authdb.UserEntry {
-		ID: entry.ID,
-		Email: entry.Email,
+	e := &authdb.UserEntry{
+		ID:                   entry.ID,
+		Email:                entry.Email,
 		PasswordHashWithSalt: entry.PasswordHashWithSalt,
 	}
 
@@ -65,4 +67,14 @@ func (db *MockDb) GetUserByEmail(email string) (*authdb.UserEntry, error) {
 	}
 
 	return nil, nil
+}
+
+func (db *MockDb) WaitForCreateUser(ctx context.Context, email string) error {
+	<-time.After(db.CreateUserTimeout)
+
+	return nil
+}
+
+func (db *MockDb) GetSharedID(key string) (string, error) {
+	return "mockid", nil
 }

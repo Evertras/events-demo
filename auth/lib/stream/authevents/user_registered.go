@@ -4,7 +4,7 @@
  *     userRegistered.avsc
  */
 
-package events
+package authevents
 
 import (
 	"github.com/actgardner/gogen-avro/compiler"
@@ -15,9 +15,10 @@ import (
 )
 
 type UserRegistered struct {
-	ID       string
-	Email    string
-	Username string
+	ID           string
+	TimeUnixMs   int64
+	Email        string
+	PasswordHash string
 }
 
 func NewUserRegisteredWriter(writer io.Writer, codec container.Codec, recordsPerBlock int64) (*container.Writer, error) {
@@ -42,11 +43,11 @@ func NewUserRegistered() *UserRegistered {
 }
 
 func (r *UserRegistered) Schema() string {
-	return "{\"fields\":[{\"name\":\"ID\",\"type\":\"string\"},{\"default\":\"\",\"name\":\"Email\",\"type\":\"string\"},{\"default\":\"\",\"name\":\"Username\",\"type\":\"string\"}],\"name\":\"UserRegistered\",\"type\":\"record\"}"
+	return "{\"fields\":[{\"name\":\"ID\",\"type\":\"string\"},{\"name\":\"TimeUnixMs\",\"type\":\"long\"},{\"name\":\"Email\",\"type\":\"string\"},{\"name\":\"PasswordHash\",\"type\":\"string\"}],\"name\":\"UserRegistered\",\"namespace\":\"com.evertras.events-demo.events\",\"type\":\"record\",\"version\":\"1\"}"
 }
 
 func (r *UserRegistered) SchemaName() string {
-	return "UserRegistered"
+	return "com.evertras.events-demo.events.UserRegistered"
 }
 
 func (r *UserRegistered) Serialize(w io.Writer) error {
@@ -66,21 +67,17 @@ func (r *UserRegistered) Get(i int) types.Field {
 	case 0:
 		return (*types.String)(&r.ID)
 	case 1:
-		return (*types.String)(&r.Email)
+		return (*types.Long)(&r.TimeUnixMs)
 	case 2:
-		return (*types.String)(&r.Username)
+		return (*types.String)(&r.Email)
+	case 3:
+		return (*types.String)(&r.PasswordHash)
 
 	}
 	panic("Unknown field index")
 }
 func (r *UserRegistered) SetDefault(i int) {
 	switch i {
-	case 1:
-		r.Email = ""
-		return
-	case 2:
-		r.Username = ""
-		return
 
 	}
 	panic("Unknown field index")

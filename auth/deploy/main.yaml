@@ -5,7 +5,7 @@ metadata:
   name: auth-api
   namespace: events-demo
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: auth-api
@@ -85,17 +85,8 @@ spec:
     spec:
       containers:
       - name: auth-db
-        image: postgres:9.5-alpine
+        image: evertras/events-demo-auth-redis:latest
         imagePullPolicy: IfNotPresent
-        env:
-          # THIS IS VERY NOT SECURE JUST TO BE CLEAR!!!!!!!!!!!!!!!!!
-          # TODO: Example of how to use K8s secrets, or maybe even Vault
-          - name: POSTGRES_USER
-            value: admin
-          - name: POSTGRES_PASSWORD
-            value: admin
-          - name: POSTGRES_DB
-            value: auth
 ---
 apiVersion: v1
 kind: Service
@@ -105,7 +96,7 @@ metadata:
 spec:
   ports:
   - name: db
-    targetPort: 5432
-    port: 5432
+    targetPort: 6379
+    port: 6379
   selector:
     app: auth-db
