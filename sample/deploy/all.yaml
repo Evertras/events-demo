@@ -14,9 +14,16 @@ spec:
         app: sample
     spec:
       containers:
-      - name: sample-container
+      - name: sample
         image: evertras/events-demo-sample:latest
         imagePullPolicy: IfNotPresent
+        env:
+        - name: JAEGER_AGENT_HOST
+          value: jaeger
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: "1"
 ---
 apiVersion: v1
 kind: Service
@@ -45,7 +52,7 @@ spec:
   - host: events-demo.localhost
     http:
       paths:
-      - path: /api/sample/
+      - path: /api/sample
         backend:
           serviceName: sample-service
           servicePort: http
