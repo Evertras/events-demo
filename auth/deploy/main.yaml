@@ -2,6 +2,33 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
+  name: auth-processor
+  namespace: events-demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: auth-processor
+  template:
+    metadata:
+      labels:
+        app: auth-processor
+    spec:
+      containers:
+      - name: auth
+        image: evertras/events-demo-auth-processor:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: JAEGER_AGENT_HOST
+          value: jaeger
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: "1"
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
   name: auth-api
   namespace: events-demo
 spec:
@@ -16,7 +43,7 @@ spec:
     spec:
       containers:
       - name: auth
-        image: evertras/events-demo-auth:latest
+        image: evertras/events-demo-auth-api:latest
         imagePullPolicy: IfNotPresent
         env:
         - name: JAEGER_AGENT_HOST

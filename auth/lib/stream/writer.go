@@ -12,7 +12,6 @@ import (
 	kafka "github.com/segmentio/kafka-go"
 
 	"github.com/Evertras/events-demo/auth/lib/stream/authevents"
-	"github.com/Evertras/events-demo/auth/lib/tracing"
 )
 
 // EventStream represents an event stream such as Kafka or Redis pub/sub
@@ -25,17 +24,10 @@ type Writer interface {
 }
 
 type kafkaStreamWriter struct {
-	tracer opentracing.Tracer
 	writer *kafka.Writer
 }
 
-func NewKafkaStreamWriter(brokers []string) (Writer, error) {
-	tracer, err := tracing.Init("kafka-writer")
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to init tracer")
-	}
-
+func NewKafkaStreamWriter(brokers []string) Writer {
 	cfg := kafka.WriterConfig{
 		Brokers:      brokers,
 		Topic:        "user",
@@ -48,12 +40,11 @@ func NewKafkaStreamWriter(brokers []string) (Writer, error) {
 
 	return &kafkaStreamWriter{
 		writer: writer,
-		tracer: tracer,
-	}, nil
+	}
 }
 
 func (k *kafkaStreamWriter) PostRegisteredEvent(ctx context.Context, ev *authevents.UserRegistered) error {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, k.tracer, "PostRegisteredEvent")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostRegisteredEvent")
 	defer span.Finish()
 
 	return k.write(ctx, []byte(ev.ID), ev)
@@ -92,7 +83,7 @@ func (k *kafkaStreamWriter) write(ctx context.Context, key []byte, ev serializer
 
 		var ctxBuf bytes.Buffer
 
-		err := k.tracer.Inject(spanCtx, opentracing.Binary, &ctxBuf)
+		err := opentracing.GlobalTracer().Inject(spanCtx, opentracing.Binary, &ctxBuf)
 
 		if err != nil {
 			return errors.Wrap(err, "failed to inject span context")

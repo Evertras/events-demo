@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/bsm/redislock"
 	"github.com/go-redis/redis"
 	"github.com/opentracing/opentracing-go"
-
-	"github.com/Evertras/events-demo/auth/lib/tracing"
+	"github.com/pkg/errors"
 )
 
 // UserEntry is a single row in the database
@@ -54,25 +52,17 @@ type Db interface {
 type db struct {
 	db   *redis.Client
 	opts ConnectionOptions
-	tracer opentracing.Tracer
 }
 
 type ConnectionOptions struct {
 	Address string
 }
 
-func New(opts ConnectionOptions) (Db, error) {
-	tracer, err := tracing.Init("redis")
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to init tracer")
-	}
-
+func New(opts ConnectionOptions) Db {
 	return &db{
 		db:   nil,
 		opts: opts,
-		tracer: tracer,
-	}, nil
+	}
 }
 
 func (d *db) Connect(ctx context.Context) error {
@@ -85,8 +75,19 @@ func (d *db) Connect(ctx context.Context) error {
 	return d.Ping(ctx)
 }
 
+func startSpan(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Redis Ping")
+
+	span.SetTag("db.type", "redis")
+	span.SetTag("span.kind", "client")
+	span.SetTag("component", "authdb")
+
+	return span, ctx
+}
+
 func (d *db) Ping(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, d.tracer, "Ping")
+	span, ctx := startSpan(ctx, "Redis Ping")
+	span.SetTag("db.statement", "PING")
 	defer span.Finish()
 
 	if d.db == nil {
@@ -97,7 +98,7 @@ func (d *db) Ping(ctx context.Context) error {
 }
 
 func (d *db) CreateUser(ctx context.Context, entry UserEntry) error {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, d.tracer, "CreateUser")
+	span, ctx := startSpan(ctx, "Redis CreateUser")
 	defer span.Finish()
 
 	if entry.Email == "" {
@@ -116,7 +117,7 @@ func (d *db) CreateUser(ctx context.Context, entry UserEntry) error {
 }
 
 func (d *db) WaitForCreateUser(ctx context.Context, email string) error {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, d.tracer, "WaitForCreateUser")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Wait for user creation in Redis")
 	defer span.Finish()
 
 	ps := d.db.PSubscribe("__keyspace@*__:creds:" + email)
@@ -139,7 +140,7 @@ func (d *db) WaitForCreateUser(ctx context.Context, email string) error {
 }
 
 func (d *db) GetUserByEmail(ctx context.Context, email string) (*UserEntry, error) {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, d.tracer, "GetUserByEmail")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Get user by email from Redis")
 	defer span.Finish()
 
 	entry := &UserEntry{}
@@ -151,13 +152,23 @@ func (d *db) GetUserByEmail(ctx context.Context, email string) (*UserEntry, erro
 			return nil, nil
 		}
 
-		return nil, errors.Wrap(err, "failed to get key")
+		err = errors.Wrap(err, "failed to get key")
+
+		span.SetTag("error", true)
+		span.SetTag("error.object", err)
+
+		return nil, err
 	}
 
 	err = json.Unmarshal([]byte(raw), entry)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "found key but could not unmarshal json")
+		err = errors.Wrap(err, "found key but could not unmarshal json")
+
+		span.SetTag("error", true)
+		span.SetTag("error.object", err)
+
+		return nil, err
 	}
 
 	return entry, nil
@@ -168,7 +179,8 @@ func credsKey(email string) string {
 }
 
 func (d *db) GetSharedValue(ctx context.Context, key string, ifNotExist string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, d.tracer, "GetSharedValue")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Get shared value in Redis")
+	span.SetTag("auth.sharedvalue.key", key)
 	defer span.Finish()
 
 	locker := redislock.New(d.db)
@@ -182,6 +194,8 @@ func (d *db) GetSharedValue(ctx context.Context, key string, ifNotExist string) 
 	)
 
 	if err != nil {
+		span.SetTag("error", true)
+		span.SetTag("error.object", err)
 		return "", err
 	}
 
@@ -191,5 +205,11 @@ func (d *db) GetSharedValue(ctx context.Context, key string, ifNotExist string) 
 
 	actualID, err := d.db.Get(key).Result()
 
-	return actualID, err
+	if err != nil {
+		span.SetTag("error", true)
+		span.SetTag("error.object", err)
+		return "", err
+	}
+
+	return actualID, nil
 }

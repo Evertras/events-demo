@@ -9,14 +9,14 @@ import (
 	"github.com/uber/jaeger-lib/metrics"
 )
 
-func Init(serviceName string) (opentracing.Tracer, error) {
+func Init(serviceName string) error {
 	cfg, err := jaegerconfig.FromEnv()
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create tracer config")
+		return errors.Wrap(err, "failed to create tracer config")
 	}
 
-	cfg.ServiceName = "auth-" + serviceName
+	cfg.ServiceName = serviceName
 
 	tracer, _, err := cfg.NewTracer(
 		jaegerconfig.Logger(jaegerlog.StdLogger),
@@ -24,40 +24,10 @@ func Init(serviceName string) (opentracing.Tracer, error) {
 	)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create tracer")
+		return errors.Wrap(err, "failed to create tracer")
 	}
 
-	return tracer, nil
+	opentracing.SetGlobalTracer(tracer)
+
+	return nil
 }
-
-/*
-// Quick ref
-func initTracing() (io.Closer, error) {
-	samplerCfg := &jaegercfg.SamplerConfig{
-		Type:              jaeger.SamplerTypeConst,
-		Param:             1,
-		SamplingServerURL: "http://jaeger:5778/sampling",
-	}
-
-	reporterCfg := &jaegercfg.ReporterConfig{
-		LogSpans: true,
-		LocalAgentHostPort: "jaeger:6831",
-	}
-
-	// Sample everything... don't use in production!
-	cfg := jaegercfg.Configuration{
-		Sampler: samplerCfg,
-		Reporter: reporterCfg,
-	}
-
-	logger := jaegerlog.StdLogger
-
-	closer, err := cfg.InitGlobalTracer(
-		"auth-api",
-		jaegercfg.Logger(logger),
-		jaegercfg.Metrics(metrics.NullFactory),
-	)
-
-	return closer, err
-}
-*/

@@ -1,14 +1,14 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
+	"github.com/opentracing/opentracing-go/ext"
 
 	"github.com/Evertras/events-demo/auth/lib/auth"
-	"github.com/Evertras/events-demo/auth/lib/tracing"
 )
 
 type Server interface {
@@ -16,17 +16,10 @@ type Server interface {
 }
 
 type server struct {
-	tracer     opentracing.Tracer
 	httpServer *http.Server
 }
 
-func New(addr string, auth auth.Auth) (Server, error) {
-	tracer, err := tracing.Init("http")
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to init tracer")
-	}
-
+func New(addr string, auth auth.Auth) Server {
 	router := http.NewServeMux()
 
 	s := &server{
@@ -36,16 +29,26 @@ func New(addr string, auth auth.Auth) (Server, error) {
 			ReadTimeout:  time.Second * 5,
 			Handler:      router,
 		},
-		tracer: tracer,
 	}
 
-	router.HandleFunc("/check", checkAuthHandler(tracer))
-	router.HandleFunc("/login", loginHandler(tracer, auth))
-	router.HandleFunc("/register", registerHandler(tracer, auth))
+	router.HandleFunc("/check", checkAuthHandler())
+	router.HandleFunc("/login", loginHandler(auth))
+	router.HandleFunc("/register", registerHandler(auth))
 
-	return s, nil
+	return s
 }
 
 func (s *server) ListenAndServe() error {
 	return s.httpServer.ListenAndServe()
+}
+
+func startSpan(operationName string, r *http.Request) (opentracing.Span, context.Context) {
+	spanCtx, _ := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
+	span := opentracing.StartSpan(operationName, ext.RPCServerOption(spanCtx))
+
+	span.SetTag("component", "server")
+
+	ctx := opentracing.ContextWithSpan(r.Context(), span)
+
+	return span, ctx
 }

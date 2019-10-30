@@ -22,7 +22,8 @@ tasks:
     deps:
       - avro
     cmds:
-      - docker build -t evertras/events-demo-auth .
+      - docker build -f Dockerfile.server -t evertras/events-demo-auth-api .
+      - docker build -f Dockerfile.processor -t evertras/events-demo-auth-processor .
 
   build-redis:
     dir: deploy/redis
@@ -53,5 +54,7 @@ tasks:
       - build
     cmds:
       - kubectl scale deployment.v1.apps/auth-api --replicas=0
+      - kubectl scale deployment.v1.apps/auth-processor --replicas=0
       - kubectl scale deployment.v1.apps/auth-api --replicas=2
+      - kubectl scale deployment.v1.apps/auth-processor --replicas=3
 

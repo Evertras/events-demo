@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/Evertras/events-demo/auth/lib/authdb"
 	"github.com/Evertras/events-demo/auth/lib/stream"
 	"github.com/Evertras/events-demo/auth/lib/stream/authevents"
-	"github.com/Evertras/events-demo/auth/lib/tracing"
 )
 
 type Processor interface {
@@ -18,21 +16,13 @@ type Processor interface {
 }
 
 type processor struct {
-	db           authdb.Db
-	tracer       opentracing.Tracer
+	db authdb.Db
 }
 
-func New(db authdb.Db) (Processor, error) {
-	tracer, err := tracing.Init("processor")
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to init tracer")
-	}
-
+func New(db authdb.Db) Processor {
 	return &processor{
-		db:           db,
-		tracer:       tracer,
-	}, nil
+		db: db,
+	}
 }
 
 func (p *processor) RegisterHandlers(streamReader stream.Reader) error {

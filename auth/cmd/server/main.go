@@ -10,10 +10,10 @@ import (
 
 	"github.com/Evertras/events-demo/auth/lib/auth"
 	"github.com/Evertras/events-demo/auth/lib/authdb"
-	"github.com/Evertras/events-demo/auth/lib/eventprocessor"
 	"github.com/Evertras/events-demo/auth/lib/server"
 	"github.com/Evertras/events-demo/auth/lib/stream"
 	"github.com/Evertras/events-demo/auth/lib/token"
+	"github.com/Evertras/events-demo/auth/lib/tracing"
 )
 
 const headerAuthToken = "X-Auth-Token"
@@ -24,6 +24,8 @@ const kafkaBrokers = "kafka-cp-kafka-headless:9092"
 
 func main() {
 	ctx := context.Background()
+
+	err := tracing.Init("auth-api")
 
 	db := initDb(ctx)
 
@@ -42,49 +44,17 @@ func main() {
 		log.Fatal("Failed to initialize token sign key:", err)
 	}
 
-	writer, err := stream.NewKafkaStreamWriter([]string{kafkaBrokers})
-
-	if err != nil {
-		log.Fatal("Failed to initialize stream writer:", err)
-	}
-
-	reader, err := stream.NewKafkaStreamReader([]string{kafkaBrokers}, consumerGroupID)
-
-	if err != nil {
-		log.Fatal("Failed to initialize stream reader:", err)
-	}
-
-	a, err := auth.New(db, writer)
-
-	if err != nil {
-		log.Fatal("Failed to create auth:", err)
-	}
-
-	server, err := server.New(addr, a)
+	writer := stream.NewKafkaStreamWriter([]string{kafkaBrokers})
+	a := auth.New(db, writer)
+	server := server.New(addr, a)
 
 	if err != nil {
 		log.Fatal("Failed to create server:", err)
 	}
 
-	processor, err := eventprocessor.New(db)
-
-	processor.RegisterHandlers(reader)
-
-	if err != nil {
-		log.Fatal("Failed to create processor:", err)
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 
 	defer cancel()
-
-	go func() {
-		err := reader.Listen(ctx)
-
-		if err != nil {
-			log.Fatalln("Error listening:", err)
-		}
-	}()
 
 	log.Println("Serving", addr)
 
@@ -92,13 +62,9 @@ func main() {
 }
 
 func initDb(ctx context.Context) authdb.Db {
-	db, err := authdb.New(authdb.ConnectionOptions{
+	db := authdb.New(authdb.ConnectionOptions{
 		Address: "auth-db:6379",
 	})
-
-	if err != nil {
-		log.Fatal("Error creating DB client:", err)
-	}
 
 	if err := db.Connect(ctx); err != nil {
 		log.Fatalln("Error connecting to DB:", err)

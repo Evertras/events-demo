@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/opentracing/opentracing-go"
-
 	"github.com/Evertras/events-demo/auth/lib/auth"
 	"github.com/Evertras/events-demo/auth/lib/token"
 )
@@ -21,13 +19,15 @@ type TokenResponse struct {
 	Token string `json:"token"`
 }
 
-func loginHandler(tracer opentracing.Tracer, auth auth.Auth) func(w http.ResponseWriter, r *http.Request) {
+func loginHandler(auth auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		span, ctx := startSpan("login", r)
+		defer span.Finish()
 
 		if r.Method != "POST" {
 			w.WriteHeader(400)
 			log.Println("Method must be POST")
+			span.SetTag("error", true)
 			return
 		}
 
@@ -36,6 +36,7 @@ func loginHandler(tracer opentracing.Tracer, auth auth.Auth) func(w http.Respons
 		if err != nil {
 			w.WriteHeader(500)
 			log.Println("Failed to parse:", err)
+			span.SetTag("error", true)
 			return
 		}
 
@@ -45,6 +46,7 @@ func loginHandler(tracer opentracing.Tracer, auth auth.Auth) func(w http.Respons
 		if err != nil {
 			w.WriteHeader(400)
 			log.Println("Could not parse body:", err)
+			span.SetTag("error", true)
 			return
 		}
 
@@ -53,12 +55,14 @@ func loginHandler(tracer opentracing.Tracer, auth auth.Auth) func(w http.Respons
 		if err != nil {
 			w.WriteHeader(500)
 			log.Println("Failed to validate user:", err)
+			span.SetTag("error", true)
 			return
 		}
 
 		if !valid {
 			w.WriteHeader(400)
 			log.Println("Bad credentials for", login.Email)
+			span.SetTag("error", true)
 			return
 		}
 
@@ -67,6 +71,7 @@ func loginHandler(tracer opentracing.Tracer, auth auth.Auth) func(w http.Respons
 		if err != nil {
 			w.WriteHeader(500)
 			log.Println("Failed to generate token:", err)
+			span.SetTag("error", true)
 			return
 		}
 
@@ -75,6 +80,7 @@ func loginHandler(tracer opentracing.Tracer, auth auth.Auth) func(w http.Respons
 		if err != nil {
 			w.WriteHeader(500)
 			log.Println("Failed to marshal token response:", err)
+			span.SetTag("error", true)
 			return
 		}
 
@@ -83,6 +89,7 @@ func loginHandler(tracer opentracing.Tracer, auth auth.Auth) func(w http.Respons
 		if err != nil {
 			w.WriteHeader(500)
 			log.Println("Failed to write body:", err)
+			span.SetTag("error", true)
 			return
 		}
 

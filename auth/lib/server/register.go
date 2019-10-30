@@ -8,8 +8,6 @@ import (
 
 	"github.com/Evertras/events-demo/auth/lib/auth"
 	"github.com/Evertras/events-demo/auth/lib/token"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 )
 
 type RegisterBody struct {
@@ -17,14 +15,10 @@ type RegisterBody struct {
 	Password string `json:"password"`
 }
 
-func registerHandler(tracer opentracing.Tracer, a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
+func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-		span := tracer.StartSpan("register", ext.RPCServerOption(spanCtx))
+		span, ctx := startSpan("register", r)
 		defer span.Finish()
-
-		ctx = opentracing.ContextWithSpan(ctx, span)
 
 		if r.Method != "POST" {
 			w.WriteHeader(400)
