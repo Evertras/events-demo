@@ -35,7 +35,7 @@ func (s *MockStreamReader) Listen(ctx context.Context) error {
 		select {
 		case ev := <-s.Receive:
 			if handler, ok := s.Handlers[ev.ID]; ok {
-				handler(ev.Data)
+				handler(ctx, ev.Data)
 			}
 
 		case <-ctx.Done():

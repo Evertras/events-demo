@@ -16,17 +16,22 @@ func TestRegistrationCreatesUserBasedOnRegistrationEvent(t *testing.T) {
 	db := mockauthdb.New()
 	reader := mockstream.NewReader()
 
-	r, err := New(db, reader)
+	r, err := New(db)
 
 	if err != nil {
 		t.Fatal("Failed to create processor:", err)
+	}
+
+	err = r.RegisterHandlers(reader)
+
+	if err != nil {
+		t.Fatal("Failed to register handlers:", err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	defer cancel()
 
-	go r.Run(ctx)
 	go reader.Listen(ctx)
 
 	receivedEvent := authevents.NewUserRegistered()
@@ -54,7 +59,7 @@ func TestRegistrationCreatesUserBasedOnRegistrationEvent(t *testing.T) {
 		t.Fatal("No users added at all")
 	}
 
-	user, err := db.GetUserByEmail(email)
+	user, err := db.GetUserByEmail(context.Background(), email)
 
 	if err != nil {
 		t.Fatal(err)

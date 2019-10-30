@@ -30,17 +30,17 @@ func New() *MockDb {
 	}
 }
 
-func (db *MockDb) Connect() error {
+func (db *MockDb) Connect(ctx context.Context) error {
 	db.Connected = true
 
 	return nil
 }
 
-func (db *MockDb) Ping() error {
+func (db *MockDb) Ping(ctx context.Context) error {
 	return nil
 }
 
-func (db *MockDb) CreateUser(entry authdb.UserEntry) error {
+func (db *MockDb) CreateUser(ctx context.Context, entry authdb.UserEntry) error {
 	if _, exists := db.EntriesByEmail[entry.Email]; exists {
 		return errors.New("email already exists")
 	}
@@ -61,7 +61,7 @@ func (db *MockDb) CreateUser(entry authdb.UserEntry) error {
 	return nil
 }
 
-func (db *MockDb) GetUserByEmail(email string) (*authdb.UserEntry, error) {
+func (db *MockDb) GetUserByEmail(ctx context.Context, email string) (*authdb.UserEntry, error) {
 	if entry, ok := db.EntriesByEmail[email]; ok {
 		return entry, nil
 	}
@@ -75,6 +75,6 @@ func (db *MockDb) WaitForCreateUser(ctx context.Context, email string) error {
 	return nil
 }
 
-func (db *MockDb) GetSharedValue(key string, ifNotExist string) (string, error) {
+func (db *MockDb) GetSharedValue(ctx context.Context, key string, ifNotExist string) (string, error) {
 	return "someval", nil
 }
