@@ -21,6 +21,10 @@ tasks:
       - kubectl apply -f ./local/logs/kibana.yml
       - kubectl apply -f ./local/logs/fluentd.yml
 
+  install-local-jaeger:
+    cmds:
+      - kubectl apply -f ./local/jaeger/jaeger.yml
+
   delete-local-kafka:
     cmds:
       - helm delete --purge kafka
@@ -40,6 +44,10 @@ tasks:
       - kubectl delete -f ./local/logs/kibana.yml
       - kubectl delete -f ./local/logs/es.yml
       - kubectl delete -f ./local/logs/namespace.yml
+
+  delete-local-jaeger:
+    cmds:
+      - kubectl delete -f ./local/jaeger/jaeger.yml
 
   terraform-init:
     status:

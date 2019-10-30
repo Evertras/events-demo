@@ -18,7 +18,11 @@ func TestRegisterUserSendsCompleteRegisterEventWithHashedID(t *testing.T) {
 
 	defer cancel()
 
-	a := New(db, writer)
+	a, err := New(db, writer)
+
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	email := "test@testing.com"
 	password := "sekrit"

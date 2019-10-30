@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/Evertras/events-demo/auth/lib/auth"
 	"github.com/Evertras/events-demo/auth/lib/token"
 )
@@ -19,8 +21,10 @@ type TokenResponse struct {
 	Token string `json:"token"`
 }
 
-func loginHandler(auth auth.Auth) func(w http.ResponseWriter, r *http.Request) {
+func loginHandler(tracer opentracing.Tracer, auth auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
 		if r.Method != "POST" {
 			w.WriteHeader(400)
 			log.Println("Method must be POST")
@@ -44,7 +48,7 @@ func loginHandler(auth auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		valid, err := auth.Validate(login.Email, login.Password)
+		valid, err := auth.Validate(ctx, login.Email, login.Password)
 
 		if err != nil {
 			w.WriteHeader(500)

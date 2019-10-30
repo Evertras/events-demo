@@ -18,6 +18,13 @@ spec:
       - name: auth
         image: evertras/events-demo-auth:latest
         imagePullPolicy: IfNotPresent
+        env:
+        - name: JAEGER_AGENT_HOST
+          value: jaeger
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: "1"
 ---
 apiVersion: v1
 kind: Service

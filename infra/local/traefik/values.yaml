@@ -2,3 +2,10 @@ dashboard:
   enabled: true
   domain: traefik.localhost
 
+tracing:
+  enabled: true
+  backend: jaeger
+  serviceName: traefik
+  jaeger:
+    localAgentHostPort: "jaeger:6831"
+    samplingServerUrl: "http://jaeger:5778/sampling"

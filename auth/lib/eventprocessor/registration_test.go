@@ -16,7 +16,11 @@ func TestRegistrationCreatesUserBasedOnRegistrationEvent(t *testing.T) {
 	db := mockauthdb.New()
 	reader := mockstream.NewReader()
 
-	r := New(db, reader)
+	r, err := New(db, reader)
+
+	if err != nil {
+		t.Fatal("Failed to create processor:", err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -44,7 +48,7 @@ func TestRegistrationCreatesUserBasedOnRegistrationEvent(t *testing.T) {
 		Data: buf.Bytes(),
 	}
 
-	<-time.After(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 10)
 
 	if len(db.EntriesByID) == 0 {
 		t.Fatal("No users added at all")

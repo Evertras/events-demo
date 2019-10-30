@@ -7,12 +7,12 @@ import (
 )
 
 type MockReceivedEvent struct {
-	ID stream.EventID
+	ID   stream.EventID
 	Data []byte
 }
 
 type MockStreamReader struct {
-	Receive chan MockReceivedEvent
+	Receive  chan MockReceivedEvent
 	Handlers map[stream.EventID]stream.StreamEventHandler
 }
 
@@ -20,7 +20,7 @@ var _ stream.Reader = &MockStreamReader{}
 
 func NewReader() *MockStreamReader {
 	return &MockStreamReader{
-		Receive: make(chan MockReceivedEvent, 100),
+		Receive:  make(chan MockReceivedEvent, 100),
 		Handlers: make(map[stream.EventID]stream.StreamEventHandler),
 	}
 }

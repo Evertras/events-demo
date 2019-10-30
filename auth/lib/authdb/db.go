@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-
 	"github.com/bsm/redislock"
 	"github.com/go-redis/redis"
+	"github.com/opentracing/opentracing-go"
+
+	"github.com/Evertras/events-demo/auth/lib/tracing"
 )
 
 // UserEntry is a single row in the database
@@ -27,21 +29,21 @@ type UserEntry struct {
 // Db is a persistent database that stores user information
 type Db interface {
 	// Connect actually connects to the database
-	Connect() error
+	Connect(ctx context.Context) error
 
 	// Ping pings the database to check connectivity
-	Ping() error
+	Ping(ctx context.Context) error
 
 	// CreateUser creates a user in the database
-	CreateUser(entry UserEntry) error
+	CreateUser(ctx context.Context, entry UserEntry) error
 
 	// GetUserByEmail returns the user's entry or nil if not found.
 	// Returns an error if something unexpected goes wrong.
-	GetUserByEmail(email string) (*UserEntry, error)
+	GetUserByEmail(ctx context.Context, email string) (*UserEntry, error)
 
 	// GetSharedValue returns a stored value; if it does not exist,
 	// it will atomically store the given value and return that.
-	GetSharedValue(key string, ifNotExist string) (string, error)
+	GetSharedValue(ctx context.Context, key string, ifNotExist string) (string, error)
 
 	// WaitForCreateUser will wait for the user to be created
 	// in the database before returning, or an error if the user
@@ -52,30 +54,41 @@ type Db interface {
 type db struct {
 	db   *redis.Client
 	opts ConnectionOptions
+	tracer opentracing.Tracer
 }
 
 type ConnectionOptions struct {
 	Address string
 }
 
-func New(opts ConnectionOptions) Db {
+func New(opts ConnectionOptions) (Db, error) {
+	tracer, err := tracing.Init("redis")
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init tracer")
+	}
+
 	return &db{
 		db:   nil,
 		opts: opts,
-	}
+		tracer: tracer,
+	}, nil
 }
 
-func (d *db) Connect() error {
+func (d *db) Connect(ctx context.Context) error {
 	d.db = redis.NewClient(&redis.Options{
 		Addr:     d.opts.Address,
 		Password: "",
 		DB:       0,
 	})
 
-	return d.Ping()
+	return d.Ping(ctx)
 }
 
-func (d *db) Ping() error {
+func (d *db) Ping(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, d.tracer, "Ping")
+	defer span.Finish()
+
 	if d.db == nil {
 		return errors.New("db not connected")
 	}
@@ -83,7 +96,10 @@ func (d *db) Ping() error {
 	return d.db.Ping().Err()
 }
 
-func (d *db) CreateUser(entry UserEntry) error {
+func (d *db) CreateUser(ctx context.Context, entry UserEntry) error {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, d.tracer, "CreateUser")
+	defer span.Finish()
+
 	if entry.Email == "" {
 		return errors.New("must supply email")
 	}
@@ -100,15 +116,18 @@ func (d *db) CreateUser(entry UserEntry) error {
 }
 
 func (d *db) WaitForCreateUser(ctx context.Context, email string) error {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, d.tracer, "WaitForCreateUser")
+	defer span.Finish()
+
 	ps := d.db.PSubscribe("__keyspace@*__:creds:" + email)
+
+	defer ps.Close()
 
 	_, err := ps.Receive()
 
 	if err != nil {
 		return err
 	}
-
-	defer ps.Close()
 
 	select {
 	case <-ps.Channel():
@@ -119,7 +138,10 @@ func (d *db) WaitForCreateUser(ctx context.Context, email string) error {
 	}
 }
 
-func (d *db) GetUserByEmail(email string) (*UserEntry, error) {
+func (d *db) GetUserByEmail(ctx context.Context, email string) (*UserEntry, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, d.tracer, "GetUserByEmail")
+	defer span.Finish()
+
 	entry := &UserEntry{}
 
 	raw, err := d.db.Get(credsKey(email)).Result()
@@ -145,7 +167,10 @@ func credsKey(email string) string {
 	return "creds:" + email
 }
 
-func (d *db) GetSharedValue(key string, ifNotExist string) (string, error) {
+func (d *db) GetSharedValue(ctx context.Context, key string, ifNotExist string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, d.tracer, "GetSharedValue")
+	defer span.Finish()
+
 	locker := redislock.New(d.db)
 
 	lockKey := key + ".lock"

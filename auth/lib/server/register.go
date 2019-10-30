@@ -8,6 +8,8 @@ import (
 
 	"github.com/Evertras/events-demo/auth/lib/auth"
 	"github.com/Evertras/events-demo/auth/lib/token"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 )
 
 type RegisterBody struct {
@@ -15,8 +17,15 @@ type RegisterBody struct {
 	Password string `json:"password"`
 }
 
-func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
+func registerHandler(tracer opentracing.Tracer, a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
+		span := tracer.StartSpan("register", ext.RPCServerOption(spanCtx))
+		defer span.Finish()
+
+		ctx = opentracing.ContextWithSpan(ctx, span)
+
 		if r.Method != "POST" {
 			w.WriteHeader(400)
 			log.Println("Method must be POST")
@@ -52,7 +61,7 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = a.Register(r.Context(), login.Email, login.Password)
+		_, err = a.Register(ctx, login.Email, login.Password)
 
 		if err != nil {
 			if err == auth.ErrUserAlreadyExists {
@@ -65,7 +74,7 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		valid, err := a.Validate(login.Email, login.Password)
+		valid, err := a.Validate(ctx, login.Email, login.Password)
 
 		if err != nil {
 			w.WriteHeader(500)

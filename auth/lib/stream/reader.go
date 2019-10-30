@@ -1,6 +1,7 @@
 package stream
 
 import (
+	"bytes"
 	"context"
 	"log"
 	"sync"
@@ -8,10 +9,14 @@ import (
 
 	"github.com/pkg/errors"
 
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	kafka "github.com/segmentio/kafka-go"
+
+	"github.com/Evertras/events-demo/auth/lib/tracing"
 )
 
-type StreamEventHandler func(data []byte) error
+type StreamEventHandler func(ctx context.Context, data []byte) error
 
 type Reader interface {
 	// RegisterHandler adds an event handler that will perform some action
@@ -29,21 +34,30 @@ type kafkaStreamReader struct {
 	handlers  map[EventID]StreamEventHandler
 	listening bool
 	lock      sync.Mutex
+	tracer    opentracing.Tracer
 }
 
-func NewKafkaStreamReader(brokers []string, groupId string) Reader {
+func NewKafkaStreamReader(brokers []string, groupId string) (Reader, error) {
+	tracer, err := tracing.Init("kafka-reader")
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init tracer:")
+	}
+
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: brokers,
-		GroupID: groupId,
-		Topic:   "user",
-		MaxWait: time.Millisecond * 100,
+		Brokers:     brokers,
+		GroupID:     groupId,
+		Topic:       "user",
+		MaxWait:     time.Millisecond * 100,
+		MaxAttempts: 5,
 	})
 
 	return &kafkaStreamReader{
 		reader:    reader,
 		handlers:  make(map[EventID]StreamEventHandler),
 		listening: false,
-	}
+		tracer:    tracer,
+	}, nil
 }
 
 func (k *kafkaStreamReader) RegisterHandler(event EventID, handler StreamEventHandler) error {
@@ -77,16 +91,36 @@ func (k *kafkaStreamReader) Listen(ctx context.Context) error {
 			return errors.Wrap(err, "failed to read")
 		}
 
-		for _, h := range m.Headers {
-			if h.Key == headerKeyEventType {
-				if handler, ok := k.handlers[EventID(h.Value)]; ok {
-					err = handler(m.Value)
+		var evType EventID
+		var spanCtx opentracing.SpanContext
 
-					if err != nil {
-						// TODO: Is this enough?
-						log.Println("Handler error:", err)
-					}
+		for _, h := range m.Headers {
+			switch h.Key {
+			case headerKeyEventType:
+				evType = EventID(h.Value)
+
+			case headerKeySpanContext:
+				buf := bytes.NewBuffer(h.Value)
+				spanCtx, err = k.tracer.Extract(opentracing.Binary, buf)
+
+				if err != nil {
+					log.Println("Error getting span context:", err)
 				}
+			}
+		}
+
+		if evType != "" {
+			if handler, ok := k.handlers[evType]; ok {
+				span := k.tracer.StartSpan("process "+string(evType), ext.RPCServerOption(spanCtx))
+
+				err = handler(opentracing.ContextWithSpan(ctx, span), m.Value)
+
+				if err != nil {
+					// TODO: Is this enough?
+					log.Println("Handler error:", err)
+				}
+
+				span.Finish()
 			}
 		}
 	}

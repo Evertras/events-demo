@@ -23,9 +23,9 @@ var _ authdb.Db = &MockDb{}
 
 func New() *MockDb {
 	return &MockDb{
-		Connected:      false,
-		EntriesByEmail: make(map[string]*authdb.UserEntry),
-		EntriesByID:    make(map[string]*authdb.UserEntry),
+		Connected:         false,
+		EntriesByEmail:    make(map[string]*authdb.UserEntry),
+		EntriesByID:       make(map[string]*authdb.UserEntry),
 		CreateUserTimeout: time.Millisecond,
 	}
 }
@@ -70,11 +70,11 @@ func (db *MockDb) GetUserByEmail(email string) (*authdb.UserEntry, error) {
 }
 
 func (db *MockDb) WaitForCreateUser(ctx context.Context, email string) error {
-	<-time.After(db.CreateUserTimeout)
+	time.Sleep(db.CreateUserTimeout)
 
 	return nil
 }
 
-func (db *MockDb) GetSharedID(key string) (string, error) {
-	return "mockid", nil
+func (db *MockDb) GetSharedValue(key string, ifNotExist string) (string, error) {
+	return "someval", nil
 }

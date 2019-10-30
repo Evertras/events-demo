@@ -16,7 +16,7 @@ tasks:
 
   inject:
     cmds:
-      - telepresence --swap-deployment auth-api --expose 13041 --docker-run --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
+      - telepresence --swap-deployment auth-api --expose 13041 --docker-run -e JAEGER_AGENT_HOST=jaeger -e JAEGER_SAMPLER_TYPE=const -e JAEGER_SAMPLER_PARAM=1 --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
 
   build:
     deps:
