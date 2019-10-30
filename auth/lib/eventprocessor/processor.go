@@ -14,16 +14,15 @@ import (
 )
 
 type Processor interface {
-	Run(ctx context.Context) error
+	RegisterHandlers(streamReader stream.Reader) error
 }
 
 type processor struct {
 	db           authdb.Db
-	streamReader stream.Reader
 	tracer       opentracing.Tracer
 }
 
-func New(db authdb.Db, streamReader stream.Reader) (Processor, error) {
+func New(db authdb.Db) (Processor, error) {
 	tracer, err := tracing.Init("processor")
 
 	if err != nil {
@@ -32,13 +31,12 @@ func New(db authdb.Db, streamReader stream.Reader) (Processor, error) {
 
 	return &processor{
 		db:           db,
-		streamReader: streamReader,
 		tracer:       tracer,
 	}, nil
 }
 
-func (p *processor) Run(ctx context.Context) error {
-	p.streamReader.RegisterHandler(stream.EventIDUserRegistered, func(ctxInner context.Context, data []byte) error {
+func (p *processor) RegisterHandlers(streamReader stream.Reader) error {
+	return streamReader.RegisterHandler(stream.EventIDUserRegistered, func(ctxInner context.Context, data []byte) error {
 		ev, err := authevents.DeserializeUserRegistered(bytes.NewReader(data))
 
 		if err != nil {
@@ -57,9 +55,4 @@ func (p *processor) Run(ctx context.Context) error {
 
 		return err
 	})
-
-	// We don't actually do anything synchronously, so just wait for context
-	<-ctx.Done()
-
-	return nil
 }

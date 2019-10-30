@@ -45,11 +45,12 @@ func NewKafkaStreamReader(brokers []string, groupId string) (Reader, error) {
 	}
 
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:     brokers,
-		GroupID:     groupId,
-		Topic:       "user",
-		MaxWait:     time.Millisecond * 100,
-		MaxAttempts: 5,
+		Brokers:               brokers,
+		GroupID:               groupId,
+		Topic:                 "user",
+		WatchPartitionChanges: true,
+		MaxWait:               time.Millisecond * 10,
+		// Logger:                log.New(os.Stdout, "kafka-reader ", log.LstdFlags),
 	})
 
 	return &kafkaStreamReader{
@@ -109,6 +110,8 @@ func (k *kafkaStreamReader) Listen(ctx context.Context) error {
 			}
 		}
 
+		log.Println("Event:", evType)
+
 		if evType != "" {
 			if handler, ok := k.handlers[evType]; ok {
 				span := k.tracer.StartSpan("process "+string(evType), ext.RPCServerOption(spanCtx))
@@ -121,6 +124,8 @@ func (k *kafkaStreamReader) Listen(ctx context.Context) error {
 				}
 
 				span.Finish()
+			} else {
+				log.Println("No handler found for", evType)
 			}
 		}
 	}

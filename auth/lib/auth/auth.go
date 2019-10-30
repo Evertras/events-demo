@@ -113,6 +113,7 @@ func (a *auth) Register(ctx context.Context, email string, password string) (Use
 
 	select {
 	case <-done:
+		fullSpan.LogEvent("complete")
 		break
 
 	case <-errs:

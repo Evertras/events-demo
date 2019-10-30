@@ -66,7 +66,9 @@ func main() {
 		log.Fatal("Failed to create server:", err)
 	}
 
-	processor, err := eventprocessor.New(db, reader)
+	processor, err := eventprocessor.New(db)
+
+	processor.RegisterHandlers(reader)
 
 	if err != nil {
 		log.Fatal("Failed to create processor:", err)
@@ -81,14 +83,6 @@ func main() {
 
 		if err != nil {
 			log.Fatalln("Error listening:", err)
-		}
-	}()
-
-	go func() {
-		err := processor.Run(ctx)
-		log.Println("Processor finished")
-		if err != nil {
-			log.Fatalln("Error processing:", err)
 		}
 	}()
 

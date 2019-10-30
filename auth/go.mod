@@ -13,7 +13,7 @@ require (
 	github.com/lib/pq v1.2.0
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.8.1
-	github.com/segmentio/kafka-go v0.3.3
+	github.com/segmentio/kafka-go v0.3.4
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/uber/jaeger-client-go v2.19.0+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible

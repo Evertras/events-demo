@@ -36,12 +36,15 @@ func NewKafkaStreamWriter(brokers []string) (Writer, error) {
 		return nil, errors.Wrap(err, "failed to init tracer")
 	}
 
-	writer := kafka.NewWriter(kafka.WriterConfig{
+	cfg := kafka.WriterConfig{
 		Brokers:      brokers,
 		Topic:        "user",
 		Balancer:     &kafka.Hash{},
 		BatchTimeout: time.Millisecond * 10,
-	})
+		// Logger:   log.New(os.Stdout, "kafka-writer ", log.LstdFlags),
+	}
+
+	writer := kafka.NewWriter(cfg)
 
 	return &kafkaStreamWriter{
 		writer: writer,
