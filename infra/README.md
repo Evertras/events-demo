@@ -38,6 +38,6 @@ The order does not matter, and you should feel free to bring things up and down 
 
 For any clients that need to know a Kafka broker, supply the following:
 
-Kafka brokers: `events-demo-kafka-cp-kafka-headless:9092`
-Zookeeper: `events-demo-kafka-cp-zookeeper-headless:2181`
+Kafka brokers: `kafka-cp-kafka-headless:9092`
+Zookeeper: `kafka-cp-zookeeper-headless:2181`
 

@@ -27,6 +27,10 @@ or in the Docker agent itself, if available.
 If you can run `kubectl get all` on a shell and get a non-error response from your local cluster,
 you're set!
 
+Note that all Kubernetes files in this repo are configured to use the `events-demo` namespace.  You
+may want to [configure kubectl](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/)
+to use this namespace to make using other CLI things easier, but this is not strictly necessary.
+
 ### Helm
 
 [Get Helm](https://helm.sh/docs/using_helm/) to help install things to Kubernetes in a more controlled way.  This is used in [the infra subdirectory](./infra).
