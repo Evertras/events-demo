@@ -1,7 +1,7 @@
 version: '2'
 
 tasks:
-  dev:
+  inject:
     cmds:
       - telepresence --swap-deployment events-demo-client --expose 80 --docker-run --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code node:12 npx ng serve --port 80 --host 0.0.0.0 --disableHostCheck true
 
