@@ -76,8 +76,9 @@ func (k *kafkaStreamReader) Listen(ctx context.Context) error {
 	}()
 
 	for {
-		m, err := k.reader.ReadMessage(ctx)
+		m, err := k.reader.FetchMessage(ctx)
 
+		// This is fatal
 		if err != nil {
 			return errors.Wrap(err, "failed to read")
 		}
@@ -106,6 +107,7 @@ func (k *kafkaStreamReader) Listen(ctx context.Context) error {
 
 				err = handler(opentracing.ContextWithSpan(ctx, span), m.Value)
 
+				// This is not fatal... for now
 				if err != nil {
 					log.Println("Handler error:", err)
 
@@ -115,6 +117,13 @@ func (k *kafkaStreamReader) Listen(ctx context.Context) error {
 
 				span.Finish()
 			}
+		}
+
+		err = k.reader.CommitMessages(ctx, m)
+
+		// This is fatal
+		if err != nil {
+			return errors.Wrap(err, "failed to commit messages")
 		}
 	}
 }
