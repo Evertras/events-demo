@@ -10,9 +10,9 @@ exports.config = {
   ],
   capabilities: {
     'browserName': 'chrome',
-    'chromeOptions': {
-      'args': ['show-fps-counter=true', '--no-sandbox']
-    }
+    //'moz:firefoxOptions': {
+      //args: [ '--headless' ]
+    //},
   },
   directConnect: true,
   baseUrl: 'http://localhost:4200/',

@@ -1,3 +1,4 @@
 # Admin
 
-Made using [ngx-admin](https://github.com/akveo/ngx-admin)
+A sandbox for an admin-y client.  Mainly for learning ngx-admin.
+
