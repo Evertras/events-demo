@@ -7,7 +7,9 @@ scenario each subdirectory would almost certainly be its own repository.
 
 ## Prerequisites
 
-Because Enterprise software is Enterprisey, there are a few things you'll need...
+Because Enterprise software is Enterprisey, there are a few things you'll need.
+
+See [the tech choice document](./Tech.md) for reasoning behind each of these.
 
 ### Go
 
@@ -15,9 +17,7 @@ Get yourself some [Go](https://golang.org/doc/install), 1.13 or higher.
 
 ### Taskfile
 
-[Get Taskfile](https://taskfile.dev/#/installation) to help run tasks more easily.  We're using
-this instead of Make because Make can be a pain to install on Windows and its syntax
-can be arcane for the uninitiated.  Taskfile is much clearer and is a simple cross-platform install.
+[Get Taskfile](https://taskfile.dev/#/installation).
 
 ### Kubernetes
 
@@ -34,15 +34,6 @@ you're set!
 ### Telepresence
 
 [Follow the instructions here](https://www.telepresence.io/reference/install) to install Telepresence.
-
-Telepresence allows us to run a shell very quickly in Kubernetes which allows for easy development.
-Each service should have a task to open a development shell that allows for direct running
-via `go run cmd/thing/main.go`, or whatever you would normally run to start the service.
-
-The advantage here is that we can bring up our entire stack in Kubernetes, then surgically replace
-a running instance of a service with our development environment.  This means that we can run our
-code in a functionally production setting to minimize "worked on my machine" differences and not
-have to deploy to staging environments just to test our changes.
 
 ## Getting Started
 
