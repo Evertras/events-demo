@@ -23,7 +23,7 @@ func main() {
 
 	db := initDb(ctx)
 
-	randomID := uuid.New().String()
+	randomID := "auth-processor-" + uuid.New().String()
 	consumerGroupID, err := db.GetSharedValue(ctx, "auth.consumerGroupID", randomID)
 
 	if err != nil {
