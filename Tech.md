@@ -122,16 +122,11 @@ does a developer have to deploy their application completely every time they wan
 at all, even locally?  If you want to test your application as it would be running in production, then
 the answer is unfortunately yes.  Fortunately Telepresence fixes that for us.
 
-Telepresence allows us to run a shell very quickly in Kubernetes which allows for easy development.
+Telepresence allows us to run a proxy container in Kubernetes which allows for easy development.
 Each service should have a task to open a development shell that allows for direct running
 via `go run cmd/thing/main.go`, or whatever you would normally run to start the service.  Your service
 is now running with full access to other services exactly as it would in production, removing variables
 and unexpected bugs that come from trying to develop in one environment while deploying to another.
-
-The advantage here is that we can bring up our entire stack in Kubernetes, then surgically replace
-a running instance of a service with our development environment.  This means that we can run our
-code in a functionally production setting to minimize "worked on my machine" differences and not
-have to deploy to staging environments just to test our changes.
 
 ### Alternatives
 
