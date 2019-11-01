@@ -1,7 +1,7 @@
 #!/bin/bash
 
-EMAIL="test@test.com"
-PASSWORD=asdf
+EMAIL=$(uuidgen)@tst.com
+PASSWORD=$(uuidgen)
 
 echo "Email:    ${EMAIL}"
 echo "Password: ${PASSWORD}"
@@ -12,9 +12,6 @@ RESPONSE=$(curl -s -H "Host:events-demo.localhost" -d "${BODY}" localhost/api/au
 TOKEN=$(echo "${RESPONSE}" | jq -r '.token')
 
 echo "Token:    ${TOKEN}"
-
-# echo ''
-# echo ${RESPONSE}
 
 export TOKEN
 

@@ -3,10 +3,13 @@ import { CommonModule } from '@angular/common';
 import { NbSecurityModule, NbRoleProvider } from '@nebular/security';
 import { of as observableOf } from 'rxjs';
 
+import { httpInterceptorProviders } from './interceptors';
 import { throwIfAlreadyLoaded } from './module-import-guard';
 import { AnalyticsService } from './utils';
 import { UserData } from './data/users';
+import { HeaderData } from './data/headers';
 import { UserService } from './mock/users.service';
+import { HeaderService } from './mock/headers.service';
 import { MockDataModule } from './mock/mock-data.module';
 
 import {
@@ -28,6 +31,7 @@ const socialLinks = [
 
 const DATA_SERVICES = [
   { provide: UserData, useClass: UserService },
+  { provide: HeaderData, useClass: HeaderService },
 ];
 
 const authStrategy = false ?
@@ -42,6 +46,7 @@ const authStrategy = false ?
     },
     token: {
       class: NbAuthJWTToken,
+      key: 'token',
     },
   });
 
@@ -55,6 +60,7 @@ export class NbSimpleRoleProvider extends NbRoleProvider {
 export const NB_CORE_PROVIDERS = [
   ...MockDataModule.forRoot().providers,
   ...DATA_SERVICES,
+  ...httpInterceptorProviders,
 
   ...NbAuthModule.forRoot({
     strategies: [

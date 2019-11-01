@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NbMediaBreakpointsService, NbMenuService, NbSidebarService, NbThemeService } from '@nebular/theme';
+import { NbAuthService } from '@nebular/auth';
 
 import { UserData } from '../../../@core/data/users';
 import { map, takeUntil } from 'rxjs/operators';
@@ -42,6 +43,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(private sidebarService: NbSidebarService,
               private menuService: NbMenuService,
               private themeService: NbThemeService,
+              private authService: NbAuthService,
               private userService: UserData,
               private breakpointService: NbMediaBreakpointsService) {
   }
@@ -52,6 +54,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.userService.getUsers()
       .pipe(takeUntil(this.destroy$))
       .subscribe((users: any) => this.user = users.nick);
+
+    this.authService.onTokenChange().subscribe(token => {
+      if (!token.isValid()) {
+        this.user = undefined;
+        return;
+      }
+
+      const payload = token.getPayload();
+
+      this.user = {
+        name: payload.email,
+      };
+    });
 
     const { xl } = this.breakpointService.getBreakpointsMap();
     this.themeService.onMediaQueryChange()

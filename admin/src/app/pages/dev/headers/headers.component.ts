@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
+import { Header, HeaderData } from '../../../@core/data/headers';
+
 @Component({
   selector: 'ngx-headers',
   templateUrl: './headers.component.html',
@@ -7,7 +9,13 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HeadersComponent implements OnInit {
 
-  constructor() { }
+  headers: Header[] = [];
+
+  constructor(
+    private headerService: HeaderData,
+  ) {
+    this.headerService.getHeaders().subscribe((headers) => this.headers = headers);
+  }
 
   ngOnInit() {
   }

@@ -1,9 +1,11 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import { HeaderService } from './headers.service';
 import { UserService } from './users.service';
 
 const SERVICES = [
+  HeaderService,
   UserService,
 ];
 

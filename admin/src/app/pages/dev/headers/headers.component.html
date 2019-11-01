@@ -1,3 +1,22 @@
-<p>
-  headers works!
-</p>
+<nb-card>
+  <nb-card-header>
+    Headers
+  </nb-card-header>
+
+  <nb-card-body>
+    Displays a list of headers as seen by a back end service.
+  </nb-card-body>
+</nb-card>
+
+<nb-card>
+  <nb-card-header>
+    Headers
+  </nb-card-header>
+
+  <nb-list>
+    <nb-list-item *ngFor="let header of headers">
+      {{ header.key }}: {{ header.value}}
+    </nb-list-item>
+  </nb-list>
+</nb-card>
+
