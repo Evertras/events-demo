@@ -1,0 +1,59 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: presence-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: presence
+  template:
+    metadata:
+      labels:
+        app: presence
+    spec:
+      containers:
+      - name: presence
+        image: evertras/events-demo-presence:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: JAEGER_AGENT_HOST
+          value: jaeger
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: "1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: presence-service
+spec:
+  ports:
+  - name: http
+    targetPort: 13337
+    port: 13337
+  selector:
+    app: presence
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: presence-ingress
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
+    ingress.kubernetes.io/auth-type: forward
+    ingress.kubernetes.io/auth-url: http://auth-api:13041/check
+    ingress.kubernetes.io/auth-response-headers: X-User-ID
+spec:
+  rules:
+  - host: events-demo.localhost
+    http:
+      paths:
+      - path: /api/presence
+        backend:
+          serviceName: presence-service
+          servicePort: http
+
