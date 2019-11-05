@@ -87,6 +87,8 @@ func (s *server) addConnection(ctx context.Context, c connection.Connection) err
 	s.connections[id] = c
 	s.m.Unlock()
 
+	s.db.SetSessionData(ctx, id, db.DataSession{})
+
 	// Feed friend list notifications to the connection
 	go func() {
 		notifications, err := s.fl.Subscribe(ctx, id)

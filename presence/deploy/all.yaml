@@ -2,7 +2,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: presence-deployment
+  name: presence
 spec:
   replicas: 1
   selector:
@@ -28,7 +28,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: presence-service
+  name: presence
 spec:
   ports:
   - name: http
@@ -54,7 +54,7 @@ spec:
       paths:
       - path: /api/presence
         backend:
-          serviceName: presence-service
+          serviceName: presence
           servicePort: http
 ---
 apiVersion: extensions/v1beta1

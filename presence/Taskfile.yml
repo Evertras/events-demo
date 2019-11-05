@@ -1,10 +1,9 @@
 version: '2'
 
 tasks:
-  dev:
+  inject:
     cmds:
-      - telepresence --docker-run --rm -it -e JAEGER_AGENT_HOST=jaeger -e JAEGER_SAMPLER_TYPE=const -e JAEGER_SAMPLER_PARAM=1 -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
-
+      - telepresence --swap-deployment presence --expose 13337 --docker-run -e JAEGER_AGENT_HOST=jaeger -e JAEGER_SAMPLER_TYPE=const -e JAEGER_SAMPLER_PARAM=1 --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
   build:
     cmds:
       - docker build -t evertras/events-demo-presence .

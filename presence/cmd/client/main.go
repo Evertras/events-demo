@@ -23,7 +23,7 @@ func main() {
 
 	u := url.URL{
 		Scheme: "ws",
-		Host:   "localhost:8111",
+		Host:   *addr,
 		Path:   "/",
 	}
 
