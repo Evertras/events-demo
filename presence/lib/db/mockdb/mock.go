@@ -10,15 +10,15 @@ import (
 type MockDb struct {
 	m sync.RWMutex
 
-	friendLists map[string][]string
-	sessions map[string]db.SessionData
+	friendLists   map[string][]string
+	sessions      map[string]db.SessionData
 	notifications chan db.PresenceChangedEvent
 }
 
 func New() *MockDb {
 	return &MockDb{
-		friendLists: make(map[string][]string),
-		sessions: make(map[string]db.SessionData),
+		friendLists:   make(map[string][]string),
+		sessions:      make(map[string]db.SessionData),
 		notifications: make(chan db.PresenceChangedEvent, 100),
 	}
 }
@@ -59,6 +59,13 @@ func (d *MockDb) Subscribe(ctx context.Context) (chan db.PresenceChangedEvent, e
 	return d.notifications, nil
 }
 
+func (d *MockDb) SendNotification(ctx context.Context, n db.PresenceChangedEvent) error {
+	// Just feed it back to ourselves
+	d.notifications <- n
+
+	return nil
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Mock-specific methods
 
@@ -89,10 +96,10 @@ func (d *MockDb) Connect(id string) {
 	d.m.Lock()
 	defer d.m.Unlock()
 
-	d.notifications <- db.PresenceChangedEvent {
-		PlayerID: id,
+	d.notifications <- db.PresenceChangedEvent{
+		PlayerID:  id,
 		NotifyIDs: d.friendLists[id],
-		Online: true,
+		Online:    true,
 	}
 
 	d.sessions[id] = db.SessionData{}
@@ -102,10 +109,10 @@ func (d *MockDb) Disconnect(id string) {
 	d.m.Lock()
 	defer d.m.Unlock()
 
-	d.notifications <- db.PresenceChangedEvent {
-		PlayerID: id,
+	d.notifications <- db.PresenceChangedEvent{
+		PlayerID:  id,
 		NotifyIDs: d.friendLists[id],
-		Online: false,
+		Online:    false,
 	}
 
 	delete(d.sessions, id)

@@ -17,4 +17,6 @@ type Db interface {
 	GetSessionData(ctx context.Context, ids []string) (map[string]SessionData, error)
 
 	Subscribe(ctx context.Context) (chan PresenceChangedEvent, error)
+
+	SendNotification(ctx context.Context, n PresenceChangedEvent) error
 }

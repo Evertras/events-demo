@@ -18,6 +18,7 @@ type FriendList interface {
 	ListenForChanges(ctx context.Context) error
 	GetFriendStatus(ctx context.Context, id string) ([]FriendStatus, error)
 	Subscribe(ctx context.Context, id string) (chan FriendStatus, error)
+	Unsubscribe(ctx context.Context, id string)
 }
 
 type friendList struct {
@@ -108,4 +109,11 @@ func (f *friendList) Subscribe(ctx context.Context, id string) (chan FriendStatu
 	f.subscriptions[id] = c
 
 	return c, nil
+}
+
+func (f *friendList) Unsubscribe(ctx context.Context, id string) {
+	f.subLock.Lock()
+	defer f.subLock.Unlock()
+
+	delete(f.subscriptions, id)
 }

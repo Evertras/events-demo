@@ -4,10 +4,17 @@ import (
 	"github.com/Evertras/events-demo/presence/lib/friendlist"
 )
 
-// Connection is a player connection
+// Connection is a verified player connection that has authenticated itself
+// somehow and is identified with a player ID
 type Connection interface {
-	// Listen blocks until the connection disconnects
-	Listen() error
+	// Close closes the connection
+	Close()
+
+	// Done returns a channel that closes when the connection disconnects
+	Done() chan interface{}
+
+	// GetID returns the player ID of the connection
+	GetID() string
 
 	SendFriendStatusNotification(notification friendlist.FriendStatus) error
 }
