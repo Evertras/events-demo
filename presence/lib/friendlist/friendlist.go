@@ -2,6 +2,7 @@ package friendlist
 
 import (
 	"context"
+	"sync"
 
 	"github.com/pkg/errors"
 
@@ -9,22 +10,61 @@ import (
 )
 
 type FriendStatus struct {
-	Id     string
+	ID     string
 	Online bool
 }
 
 type FriendList interface {
+	ListenForChanges(ctx context.Context) error
 	GetFriendStatus(ctx context.Context, id string) ([]FriendStatus, error)
-	Notifications(ctx context.Context, id string) (chan FriendStatus, error)
+	Subscribe(ctx context.Context, id string) (chan FriendStatus, error)
 }
 
 type friendList struct {
 	db db.Db
+
+	subLock       sync.RWMutex
+	subscriptions map[string]chan FriendStatus
 }
 
 func New(db db.Db) FriendList {
-	return &friendList {
-		db: db,
+	return &friendList{
+		db:            db,
+		subscriptions: make(map[string]chan FriendStatus),
+	}
+}
+
+func (f *friendList) ListenForChanges(ctx context.Context) error {
+	events, err := f.db.Subscribe(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+
+		case ev, open := <-events:
+			if !open {
+				return nil
+			}
+
+			f.subLock.RLock()
+
+			for _, id := range ev.NotifyIDs {
+				// If no one is listening, just drop it on the floor
+				if s, ok := f.subscriptions[id]; ok {
+					s <- FriendStatus{
+						ID:     ev.PlayerID,
+						Online: ev.Online,
+					}
+				}
+			}
+
+			f.subLock.RUnlock()
+		}
 	}
 }
 
@@ -41,7 +81,7 @@ func (f *friendList) GetFriendStatus(ctx context.Context, id string) ([]FriendSt
 
 	for _, id := range friends {
 		s := FriendStatus{
-			Id: id,
+			ID:     id,
 			Online: false,
 		}
 
@@ -55,6 +95,17 @@ func (f *friendList) GetFriendStatus(ctx context.Context, id string) ([]FriendSt
 	return statusList, nil
 }
 
-func (f *friendList) Notifications(ctx context.Context, id string) (chan FriendStatus, error) {
-	return nil, nil
+func (f *friendList) Subscribe(ctx context.Context, id string) (chan FriendStatus, error) {
+	f.subLock.Lock()
+	defer f.subLock.Unlock()
+
+	if _, ok := f.subscriptions[id]; ok {
+		return nil, errors.New("already subscribed for this ID")
+	}
+
+	c := make(chan FriendStatus, 10)
+
+	f.subscriptions[id] = c
+
+	return c, nil
 }
