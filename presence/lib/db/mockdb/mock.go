@@ -86,10 +86,12 @@ func (d *MockDb) MakeFriends(a string, b string) {
 	}
 }
 
-func (d *MockDb) SetFriendList(id string, friends []string) {
+func (d *MockDb) SetFriendList(ctx context.Context, id string, friends []string) error {
 	for _, friendID := range friends {
 		d.MakeFriends(id, friendID)
 	}
+
+	return nil
 }
 
 func (d *MockDb) Connect(id string) {

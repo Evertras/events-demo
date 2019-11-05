@@ -42,7 +42,7 @@ func TestPlayerNotifiedWhenFriendConnects(t *testing.T) {
 
 	listener.AddConnection(connB)
 
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 1000)
 
 	rcv := connA.GetReceivedFriendStatusNotifications()
 

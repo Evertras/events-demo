@@ -56,4 +56,90 @@ spec:
         backend:
           serviceName: presence-service
           servicePort: http
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: presence-db
+  namespace: events-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: presence-db
+  template:
+    metadata:
+      labels:
+        app: presence-db
+    spec:
+      containers:
+      - name: presence-db
+        image: redis:5.0-alpine
+        imagePullPolicy: IfNotPresent
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: presence-db
+  namespace: events-demo
+spec:
+  ports:
+  - name: db
+    targetPort: 6379
+    port: 6379
+  selector:
+    app: presence-db
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: presence-db-redis-commander
+  namespace: events-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: presence-db-redis-commander
+  template:
+    metadata:
+      labels:
+        app: presence-db-redis-commander
+    spec:
+      containers:
+      - name: redis-commander
+        image: rediscommander/redis-commander:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: REDIS_HOSTS
+          value: main:presence-db:6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: presence-db-redis-commander
+  namespace: events-demo
+spec:
+  ports:
+  - name: http
+    targetPort: 8081
+    port: 8081
+  selector:
+    app: presence-db-redis-commander
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: presence-ingress-db-redis-commander
+  namespace: events-demo
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: presence-db-redis-commander.localhost
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: presence-db-redis-commander
+          servicePort: http
 

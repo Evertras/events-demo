@@ -1,6 +1,7 @@
 package mockdb
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -10,6 +11,7 @@ import (
 //       have confidence in the "real" tests.
 
 func TestConnectSendsNotifications(t *testing.T) {
+	ctx := context.Background()
 	m := New()
 
 	playerID := "some-id"
@@ -18,7 +20,7 @@ func TestConnectSendsNotifications(t *testing.T) {
 		"B",
 	}
 
-	m.SetFriendList(playerID, notifyList)
+	m.SetFriendList(ctx, playerID, notifyList)
 
 	gotNotification := make(chan bool, 1)
 

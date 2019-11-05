@@ -13,6 +13,7 @@ func makeMockDb() *mockdb.MockDb {
 }
 
 func TestPlayerHasFriendsList(t *testing.T) {
+	ctx := context.Background()
 	db := makeMockDb()
 	defer db.Close()
 	playerID := "abcdefplayer"
@@ -25,7 +26,7 @@ func TestPlayerHasFriendsList(t *testing.T) {
 
 	f := New(db)
 
-	db.SetFriendList(playerID, playerFriends)
+	db.SetFriendList(ctx, playerID, playerFriends)
 	db.Connect(connectedFriend)
 
 	returnedFriends, err := f.GetFriendStatus(context.Background(), playerID)
@@ -106,7 +107,7 @@ func TestNotificationsSentWhenPresenceChanges(t *testing.T) {
 		t.Fatal("Failed to get notification channel", err)
 	}
 
-	db.SetFriendList(playerID, playerFriends)
+	db.SetFriendList(ctx, playerID, playerFriends)
 	db.Connect(connectedFriend)
 
 	select {
