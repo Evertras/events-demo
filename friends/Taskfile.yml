@@ -1,0 +1,21 @@
+version: '2'
+
+tasks:
+  dev:
+    cmds:
+      - telepresence --docker-run --rm -it -e JAEGER_AGENT_HOST=jaeger JAEGER_SAMPLER_TYPE=const -e JAEGER_SAMPLER_PARAM=1 -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
+
+  build:
+    cmds:
+      - docker build -t evertras/events-demo-sample .
+
+  install-local:
+    deps:
+      - build
+    cmds:
+      - kubectl apply -f deploy/all.yaml
+
+  delete-local:
+    cmds:
+      - kubectl delete -f deploy/all.yaml
+
