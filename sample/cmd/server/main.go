@@ -1,41 +1,16 @@
 package main
 
 import (
-	"context"
 	"log"
-	"net/http"
-	"time"
 
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pkg/errors"
 	jaegerconfig "github.com/uber/jaeger-client-go/config"
 	jaegerlog "github.com/uber/jaeger-client-go/log"
 	"github.com/uber/jaeger-lib/metrics"
+
+	"github.com/Evertras/events-demo/sample/lib/server"
 )
-
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	span, _ := startSpan("hello", r)
-	defer span.Finish()
-
-	w.Write([]byte("Hello\n"))
-	w.Write([]byte(r.URL.String() + "\n"))
-	w.Write([]byte(r.URL.Hostname() + "\n"))
-	w.Write([]byte(r.URL.RawPath + "\n"))
-
-	log.Println("helloHandler end")
-}
-
-func headerEchoHandler(w http.ResponseWriter, r *http.Request) {
-	span, _ := startSpan("header echo", r)
-	defer span.Finish()
-
-	for header := range r.Header {
-		w.Write([]byte(header + ": " + r.Header.Get(header) + "\n"))
-	}
-
-	log.Println("headerEchoHandler end")
-}
 
 func main() {
 	addr := "0.0.0.0:13030"
@@ -44,21 +19,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	router := http.NewServeMux()
-
-	router.HandleFunc("/", helloHandler)
-	router.HandleFunc("/headers", headerEchoHandler)
-
-	server := &http.Server{
-		Addr:         addr,
-		WriteTimeout: time.Second * 5,
-		ReadTimeout:  time.Second * 5,
-		Handler:      router,
-	}
+	s := server.New(addr)
 
 	log.Println("Serving", addr)
 
-	log.Fatal(server.ListenAndServe())
+	log.Fatal(s.ListenAndServe())
 }
 
 func initTracing() error {
@@ -82,15 +47,4 @@ func initTracing() error {
 	opentracing.SetGlobalTracer(tracer)
 
 	return nil
-}
-
-func startSpan(operationName string, r *http.Request) (opentracing.Span, context.Context) {
-	spanCtx, _ := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-	span := opentracing.StartSpan(operationName, ext.RPCServerOption(spanCtx))
-
-	span.SetTag("component", "server")
-
-	ctx := opentracing.ContextWithSpan(r.Context(), span)
-
-	return span, ctx
 }
