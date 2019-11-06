@@ -2,7 +2,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: sample-deployment
+  name: sample
 spec:
   replicas: 1
   selector:
@@ -28,7 +28,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sample-service
+  name: sample
 spec:
   ports:
   - name: http
@@ -40,7 +40,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: sample-ingress
+  name: sample
   annotations:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
@@ -54,6 +54,6 @@ spec:
       paths:
       - path: /api/sample
         backend:
-          serviceName: sample-service
+          serviceName: sample
           servicePort: http
 
