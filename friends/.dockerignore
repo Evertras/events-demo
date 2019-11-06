@@ -1,2 +1,3 @@
 deploy/
+Taskfile.yml
 *.log

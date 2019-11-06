@@ -38,6 +38,43 @@ spec:
     app: friends
 ---
 apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: friends-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: friends
+  template:
+    metadata:
+      labels:
+        app: friends
+    spec:
+      containers:
+      - name: friends
+        image: neo4j:3.5.12
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: NEO4J_AUTH
+          value: none
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: friends-db
+spec:
+  ports:
+  - name: http
+    targetPort: 7474
+    port: 7474
+  - name: bolt
+    targetPort: 7687
+    port: 7687
+  selector:
+    app: friends
+---
+apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: friends-ingress
