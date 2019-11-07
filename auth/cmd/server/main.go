@@ -30,15 +30,6 @@ func main() {
 
 	db := initDb(ctx)
 
-	randomID := uuid.New().String()
-	consumerGroupID, err := db.GetSharedValue(ctx, "auth.consumerGroupID", randomID)
-
-	if err != nil {
-		log.Fatal("Failed getting consumer group ID:", err)
-	}
-
-	log.Println("Using consumer group ID", consumerGroupID)
-
 	err = initSignKey(ctx, db)
 
 	if err != nil {
