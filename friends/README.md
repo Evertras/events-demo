@@ -4,13 +4,14 @@ This service handles friend lists.
 
 ## Neo4j
 
-Because ENTERPRISE, let's try a graph database.  We'll use Neo4j.
-[The go driver](https://github.com/neo4j/neo4j-go-driver) requires
-cgo wrapping around their C client, which is a bit of a pain.
+Because ENTERPRISE, let's try a graph database!  We'll use Neo4j
+because it's the most mature and has the largest community.
 
+[The go driver](https://github.com/neo4j/neo4j-go-driver) requires
+cgo wrapping around their C client, which is a bit of a pain.  
 The complicated bits have been handled by a Docker image in
-[Dockerfile.dev](./Dockerfile.dev) which is referenced by the `dev`
-task.
+[Dockerfile.dev](./Dockerfile.dev) which is referenced by the
+`dev` task.
 
 ```bash
 task dev
@@ -22,6 +23,18 @@ go run --tags seabolt_static cmd/server/main.go
 go build --tags seabolt_static cmd/server/main.go
 # etc.
 ```
+
+An ingress has been added to access the Neo4j UI.  You can access it at
+[http://friends-db.localhost](http://friends-db.localhost).  To connect
+to the database, you'll need to run the following in a terminal:
+
+```bash
+task db-ui-forward
+```
+
+This will expose the Neo4j instance to localhost:7687.  Use this address
+to connect in the UI.  Note that auth has been disabled for simplicity,
+so do not enter a user or password.
 
 ## Actions
 
@@ -48,10 +61,6 @@ A player should be able to get their friend list at any time.
 A player can remove a friend.  If a friend is removed, the action
 is mutual; both players will be removed from each others' lists.
 Friendship is always a two way street!
-
-## Tech
-
-Let's see what graph databases are all about!  TBD
 
 ## Future stuff
 

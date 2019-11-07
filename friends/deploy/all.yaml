@@ -45,19 +45,24 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: friends
+      app: friends-db
   template:
     metadata:
       labels:
-        app: friends
+        app: friends-db
     spec:
       containers:
-      - name: friends
+      - name: db
         image: neo4j:3.5.12
         imagePullPolicy: IfNotPresent
         env:
         - name: NEO4J_AUTH
           value: none
+
+        - name: NEO4J_dbms_connectors_default__listen__address
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
 ---
 apiVersion: v1
 kind: Service
@@ -72,12 +77,12 @@ spec:
     targetPort: 7687
     port: 7687
   selector:
-    app: friends
+    app: friends-db
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: friends-ingress
+  name: friends
   annotations:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
@@ -92,5 +97,22 @@ spec:
       - path: /api/friends
         backend:
           serviceName: friends
+          servicePort: http
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: friends-db-ui
+  namespace: events-demo
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: friends-db.localhost
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: friends-db
           servicePort: http
 

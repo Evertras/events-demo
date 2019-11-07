@@ -6,6 +6,10 @@ tasks:
       - docker build -f Dockerfile.dev -t events-demo-friends-dev .
       - telepresence --docker-run --rm -it -e JAEGER_AGENT_HOST=jaeger -e JAEGER_SAMPLER_TYPE=const -e JAEGER_SAMPLER_PARAM=1 -v ${PWD}:/go/src/github.com/Evertras/events-demo events-demo-friends-dev /bin/bash
 
+  db-ui-forward:
+    cmds:
+      - kubectl port-forward --address localhost service/friends-db 7687:7687
+
   build:
     cmds:
       - docker build -t evertras/events-demo-friends .
