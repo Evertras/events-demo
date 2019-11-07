@@ -11,8 +11,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Evertras/events-demo/auth/lib/authdb"
-	"github.com/Evertras/events-demo/auth/lib/stream"
-	"github.com/Evertras/events-demo/auth/lib/stream/authevents"
+	"github.com/Evertras/events-demo/auth/lib/events"
+	"github.com/Evertras/events-demo/auth/lib/events/authevents"
 )
 
 type UserID string
@@ -33,14 +33,14 @@ type Auth interface {
 }
 
 type auth struct {
-	db           authdb.Db
-	streamWriter stream.Writer
+	db          authdb.Db
+	eventWriter events.Writer
 }
 
-func New(db authdb.Db, streamWriter stream.Writer) Auth {
+func New(db authdb.Db, eventWriter events.Writer) Auth {
 	a := &auth{
-		db:           db,
-		streamWriter: streamWriter,
+		db:          db,
+		eventWriter: eventWriter,
 	}
 
 	return a
@@ -96,7 +96,7 @@ func (a *auth) Register(ctx context.Context, email string, password string) (Use
 	ev.PasswordHash = string(hash)
 	ev.TimeUnixMs = time.Now().Unix()
 
-	err = a.streamWriter.PostRegisteredEvent(ctx, ev)
+	err = a.eventWriter.PostRegisteredEvent(ctx, ev)
 
 	if err != nil {
 		return "", err

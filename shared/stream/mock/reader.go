@@ -1,9 +1,9 @@
-package mockstream
+package mock
 
 import (
 	"context"
 
-	"github.com/Evertras/events-demo/auth/lib/stream"
+	"github.com/Evertras/events-demo/shared/stream"
 )
 
 type MockReceivedEvent struct {

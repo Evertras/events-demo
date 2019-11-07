@@ -7,8 +7,9 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Evertras/events-demo/auth/lib/authdb"
-	"github.com/Evertras/events-demo/auth/lib/stream"
-	"github.com/Evertras/events-demo/auth/lib/stream/authevents"
+	"github.com/Evertras/events-demo/auth/lib/events"
+	"github.com/Evertras/events-demo/auth/lib/events/authevents"
+	"github.com/Evertras/events-demo/shared/stream"
 )
 
 type Processor interface {
@@ -26,7 +27,7 @@ func New(db authdb.Db) Processor {
 }
 
 func (p *processor) RegisterHandlers(streamReader stream.Reader) error {
-	return streamReader.RegisterHandler(stream.EventIDUserRegistered, func(ctxInner context.Context, data []byte) error {
+	return streamReader.RegisterHandler(events.EventIDUserRegistered, func(ctxInner context.Context, data []byte) error {
 		ev, err := authevents.DeserializeUserRegistered(bytes.NewReader(data))
 
 		if err != nil {

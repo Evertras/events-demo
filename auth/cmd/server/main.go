@@ -8,10 +8,11 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Evertras/events-demo/shared/stream"
 	"github.com/Evertras/events-demo/auth/lib/auth"
 	"github.com/Evertras/events-demo/auth/lib/authdb"
+	"github.com/Evertras/events-demo/auth/lib/events"
 	"github.com/Evertras/events-demo/auth/lib/server"
-	"github.com/Evertras/events-demo/auth/lib/stream"
 	"github.com/Evertras/events-demo/auth/lib/token"
 	"github.com/Evertras/events-demo/auth/lib/tracing"
 )
@@ -44,7 +45,8 @@ func main() {
 		log.Fatal("Failed to initialize token sign key:", err)
 	}
 
-	writer := stream.NewKafkaStreamWriter([]string{kafkaBrokers})
+	streamWriter := stream.NewKafkaStreamWriter("user", []string{kafkaBrokers})
+	writer := events.NewWriter(streamWriter)
 	a := auth.New(db, writer)
 	server := server.New(addr, a)
 

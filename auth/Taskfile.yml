@@ -5,22 +5,59 @@ tasks:
     sources:
       - schemas/avro/*.avsc
     generates:
-      - lib/stream/authevents/*.go
+      - lib/events/authevents/*.go
     cmds:
-      - mkdir -p lib/stream/authevents/
-      - gogen-avro --package authevents lib/stream/authevents/ ./schemas/avro/*.avsc
+      - mkdir -p lib/events/authevents/
+      - gogen-avro --package authevents lib/events/authevents/ ./schemas/avro/*.avsc
 
-  dev:
+  inject-processor:
+    deps:
+      - avro
+      - copy-shared
     cmds:
-      - telepresence --docker-run --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
+      - "telepresence --swap-deployment auth-processor
+                     --expose 13041
+                     --docker-run
+                     -e JAEGER_AGENT_HOST=jaeger
+                     -e JAEGER_SAMPLER_TYPE=const
+                     -e JAEGER_SAMPLER_PARAM=1
+                     -v ${PWD}:/usr/local/code/auth
+                     -v ${PWD%/auth}/shared:/usr/local/code/shared
+                     -w /usr/local/code/auth
+                     --rm -it
+                     golang:1.13 /bin/bash"
 
-  inject:
+  inject-api:
+    deps:
+      - avro
+      - copy-shared
     cmds:
-      - telepresence --swap-deployment auth-api --expose 13041 --docker-run -e JAEGER_AGENT_HOST=jaeger -e JAEGER_SAMPLER_TYPE=const -e JAEGER_SAMPLER_PARAM=1 --rm -it -v ${PWD}:/usr/local/code -w /usr/local/code golang:1.13 /bin/bash
+      - "telepresence --swap-deployment auth-api
+                     --expose 13041
+                     --docker-run
+                     -e JAEGER_AGENT_HOST=jaeger
+                     -e JAEGER_SAMPLER_TYPE=const
+                     -e JAEGER_SAMPLER_PARAM=1
+                     -v ${PWD}:/usr/local/code/auth
+                     -v ${PWD%/auth}/shared:/usr/local/code/shared
+                     -w /usr/local/code/auth
+                     --rm -it
+                     golang:1.13 /bin/bash"
+
+  # NOTE: This is a hack needed because we're trying to cram everything
+  # into a single repo and Docker contexts get weird.  This is not a good thing.
+  copy-shared:
+    sources:
+      - ../shared/**/*
+    generates:
+      - ./lib/shared/**/*
+    cmds:
+      - cp -R ../shared/ ./lib/shared/
 
   build:
     deps:
       - avro
+      - copy-shared
     cmds:
       - docker build -f Dockerfile.server -t evertras/events-demo-auth-api .
       - docker build -f Dockerfile.processor -t evertras/events-demo-auth-processor .

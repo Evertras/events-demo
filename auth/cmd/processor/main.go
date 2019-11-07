@@ -8,9 +8,10 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Evertras/events-demo/shared/stream"
+
 	"github.com/Evertras/events-demo/auth/lib/authdb"
 	"github.com/Evertras/events-demo/auth/lib/eventprocessor"
-	"github.com/Evertras/events-demo/auth/lib/stream"
 	"github.com/Evertras/events-demo/auth/lib/tracing"
 )
 
@@ -32,7 +33,7 @@ func main() {
 
 	log.Println("Using consumer group ID", consumerGroupID)
 
-	reader := stream.NewKafkaStreamReader([]string{kafkaBrokers}, consumerGroupID)
+	reader := stream.NewKafkaStreamReader("user", []string{kafkaBrokers}, consumerGroupID)
 	processor := eventprocessor.New(db)
 
 	processor.RegisterHandlers(reader)

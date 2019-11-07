@@ -7,22 +7,18 @@ import (
 	"time"
 
 	"github.com/Evertras/events-demo/auth/lib/authdb/mockauthdb"
-	"github.com/Evertras/events-demo/auth/lib/stream"
-	"github.com/Evertras/events-demo/auth/lib/stream/authevents"
-	"github.com/Evertras/events-demo/auth/lib/stream/mockstream"
+	"github.com/Evertras/events-demo/auth/lib/events"
+	"github.com/Evertras/events-demo/auth/lib/events/authevents"
+	mockstream "github.com/Evertras/events-demo/shared/stream/mock"
 )
 
 func TestRegistrationCreatesUserBasedOnRegistrationEvent(t *testing.T) {
 	db := mockauthdb.New()
 	reader := mockstream.NewReader()
 
-	r, err := New(db)
+	r := New(db)
 
-	if err != nil {
-		t.Fatal("Failed to create processor:", err)
-	}
-
-	err = r.RegisterHandlers(reader)
+	err := r.RegisterHandlers(reader)
 
 	if err != nil {
 		t.Fatal("Failed to register handlers:", err)
@@ -49,7 +45,7 @@ func TestRegistrationCreatesUserBasedOnRegistrationEvent(t *testing.T) {
 	receivedEvent.Serialize(&buf)
 
 	reader.Receive <- mockstream.MockReceivedEvent{
-		ID:   stream.EventIDUserRegistered,
+		ID:   events.EventIDUserRegistered,
 		Data: buf.Bytes(),
 	}
 

@@ -6,23 +6,22 @@ import (
 	"time"
 
 	"github.com/Evertras/events-demo/auth/lib/authdb/mockauthdb"
-	"github.com/Evertras/events-demo/auth/lib/stream/authevents"
-	"github.com/Evertras/events-demo/auth/lib/stream/mockstream"
+	"github.com/Evertras/events-demo/auth/lib/events"
+	"github.com/Evertras/events-demo/auth/lib/events/authevents"
+	mockstream "github.com/Evertras/events-demo/shared/stream/mock"
 )
 
 func TestRegisterUserSendsCompleteRegisterEventWithHashedID(t *testing.T) {
 	db := mockauthdb.New()
-	writer := mockstream.NewWriter()
+	inner := mockstream.NewWriter()
+
+	writer := events.NewWriter(inner)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 
 	defer cancel()
 
-	a, err := New(db, writer)
-
-	if err != nil {
-		t.Fatal(err)
-	}
+	a := New(db, writer)
 
 	email := "test@testing.com"
 	password := "sekrit"
@@ -33,11 +32,11 @@ func TestRegisterUserSendsCompleteRegisterEventWithHashedID(t *testing.T) {
 		t.Fatal("Failed to register", err)
 	}
 
-	if len(writer.Sent) != 1 {
-		t.Fatalf("Expected 1 event sent, but found %d", len(writer.Sent))
+	if len(inner.Sent) != 1 {
+		t.Fatalf("Expected 1 event sent, but found %d", len(inner.Sent))
 	}
 
-	ev := writer.Sent[0].(*authevents.UserRegistered)
+	ev := inner.Sent[0].Payload.(*authevents.UserRegistered)
 
 	if ev == nil {
 		t.Fatal("Expected authevents.UserRegistered but did not cast correctly")
