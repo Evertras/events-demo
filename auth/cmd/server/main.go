@@ -6,15 +6,13 @@ import (
 	"encoding/base64"
 	"log"
 
-	"github.com/google/uuid"
-
-	"github.com/Evertras/events-demo/shared/stream"
 	"github.com/Evertras/events-demo/auth/lib/auth"
 	"github.com/Evertras/events-demo/auth/lib/authdb"
 	"github.com/Evertras/events-demo/auth/lib/events"
 	"github.com/Evertras/events-demo/auth/lib/server"
 	"github.com/Evertras/events-demo/auth/lib/token"
 	"github.com/Evertras/events-demo/auth/lib/tracing"
+	"github.com/Evertras/events-demo/shared/stream"
 )
 
 const headerAuthToken = "X-Auth-Token"
