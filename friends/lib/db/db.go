@@ -63,6 +63,15 @@ func (d *db) Connect(ctx context.Context) error {
 }
 
 func (d *db) GetSharedValue(ctx context.Context, key string, ifNotSet string) (string, error) {
+	_, err := d.session.Run(
+		`CREATE CONSTRAINT ON (v:SharedValue) ASSERT v.key IS UNIQUE`,
+		nil,
+	)
+
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create constraint")
+	}
+
 	result, err := d.session.Run(
 		`
 MERGE (v:SharedValue { key: $key })
@@ -80,13 +89,17 @@ RETURN v.value
 		return "", errors.Wrap(result.Err(), "result failed")
 	}
 
-	val, got := result.Record().Get("v.value")
+	for result.Next() {
+		val, got := result.Record().Get("v.value")
 
-	if !got {
-		return "", errors.New("did not return a value")
+		if !got {
+			return "", errors.New("did not return a value in record")
+		}
+
+		return val.(string), nil
 	}
 
-	return val.(string), nil
+	return "", errors.New("did not find any records")
 }
 
 func (d *db) Close() error {
@@ -98,7 +111,7 @@ func (d *db) Close() error {
 
 func (d *db) CreatePlayer(ctx context.Context, userID string) error {
 	_, err := d.session.Run(
-		`MERGE (:Player { id: $userID })`,
+		`MERGE (:Player { playerID: $userID })`,
 		map[string]interface{}{"userID": userID},
 	)
 

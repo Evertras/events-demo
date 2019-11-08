@@ -2,3 +2,4 @@ deploy/
 Taskfile.yml
 *.log
 README.md
+Dockerfile*

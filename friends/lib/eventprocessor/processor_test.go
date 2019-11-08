@@ -2,6 +2,7 @@ package eventprocessor
 
 import (
 	"bytes"
+	"context"
 	"testing"
 	"time"
 
@@ -12,11 +13,10 @@ import (
 	mockstream "github.com/Evertras/events-demo/shared/stream/mock"
 )
 
-func genMockReceiveUserRegisterEvent(id string, email string) mockstream.MockReceivedEvent {
+func genMockReceiveUserRegisterEvent(id string) mockstream.MockReceivedEvent {
 	ev := friendevents.NewUserRegistered()
 
 	ev.ID = id
-	ev.Email = email
 
 	var buf bytes.Buffer
 
@@ -29,21 +29,25 @@ func genMockReceiveUserRegisterEvent(id string, email string) mockstream.MockRec
 }
 
 func TestAddsRegisteredUsersToDb(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	db := mockdb.New()
 	p := New(db)
 
 	id := "someplayer"
-	email := "some@player.com"
 
 	streamReader := mockstream.NewReader()
 
+	go streamReader.Listen(ctx)
+
 	p.RegisterHandlers(streamReader)
 
-	streamReader.Receive <- genMockReceiveUserRegisterEvent(id, email)
+	streamReader.Receive <- genMockReceiveUserRegisterEvent(id)
 
 	time.Sleep(time.Millisecond * 100)
 
-	if _, exists := db.Invites[id]; !exists {
+	if !db.MockPlayerExists(id) {
 		t.Error("Did not find player in DB after registration event was sent")
 	}
 }

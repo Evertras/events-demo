@@ -9,12 +9,12 @@ import (
 type Db struct {
 	m sync.Mutex
 
-	Invites map[string][]string
+	invites map[string][]string
 }
 
 func New() *Db {
 	return &Db{
-		Invites: make(map[string][]string),
+		invites: make(map[string][]string),
 	}
 }
 
@@ -34,8 +34,8 @@ func (d *Db) CreatePlayer(ctx context.Context, userID string) error {
 	d.m.Lock()
 	defer d.m.Unlock()
 
-	if _, exists := d.Invites[userID]; !exists {
-		d.Invites[userID] = make([]string, 0)
+	if _, exists := d.invites[userID]; !exists {
+		d.invites[userID] = make([]string, 0)
 	}
 
 	return nil
@@ -49,7 +49,7 @@ func (d *Db) SendInvite(ctx context.Context, t time.Time, fromID string, toID st
 	d.m.Lock()
 	defer d.m.Unlock()
 
-	d.Invites[toID] = append(d.Invites[toID], fromID)
+	d.invites[toID] = append(d.invites[toID], fromID)
 
 	return nil
 }
@@ -58,9 +58,21 @@ func (d *Db) GetPendingInvites(ctx context.Context, id string) ([]string, error)
 	d.m.Lock()
 	defer d.m.Unlock()
 
-	if pending, ok := d.Invites[id]; ok {
+	if pending, ok := d.invites[id]; ok {
 		return pending, nil
 	}
 
 	return []string{}, nil
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Mock specific stuff
+
+func (d *Db) MockPlayerExists(id string) bool {
+	d.m.Lock()
+	defer d.m.Unlock()
+
+	_, exists := d.invites[id]
+
+	return exists
 }

@@ -8,6 +8,7 @@ tasks:
       - lib/events/friendevents/*.go
     cmds:
       - mkdir -p lib/events/friendevents/
+      - rm lib/events/friendevents/*
       - gogen-avro --package friendevents lib/events/friendevents/ ./schemas/avro/*.avsc
 
   dev:
@@ -27,7 +28,8 @@ tasks:
       - avro
       - copy-shared
     cmds:
-      - docker build -t evertras/events-demo-friends .
+      - docker build -f Dockerfile.server -t evertras/events-demo-friends-api .
+      - docker build -f Dockerfile.processor -t evertras/events-demo-friends-processor .
 
   install-local:
     deps:

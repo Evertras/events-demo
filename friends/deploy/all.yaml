@@ -2,20 +2,46 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: friends
+  name: friends-processor
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: friends
+      app: friends-processor
   template:
     metadata:
       labels:
-        app: friends
+        app: friends-processor
     spec:
       containers:
       - name: friends
-        image: evertras/events-demo-friends:latest
+        image: evertras/events-demo-friends-processor:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: JAEGER_AGENT_HOST
+          value: jaeger
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: "1"
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: friends-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: friends-api
+  template:
+    metadata:
+      labels:
+        app: friends-api
+    spec:
+      containers:
+      - name: friends-api
+        image: evertras/events-demo-friends-api:latest
         imagePullPolicy: IfNotPresent
         env:
         - name: JAEGER_AGENT_HOST
@@ -28,14 +54,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: friends
+  name: friends-api
 spec:
   ports:
   - name: http
     targetPort: 13030
     port: 13030
   selector:
-    app: friends
+    app: friends-api
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

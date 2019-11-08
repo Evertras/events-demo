@@ -1,0 +1,25 @@
+FROM golang:1.13 AS go-builder
+
+RUN apt-get update
+RUN apt-get install libssl-dev pkg-config
+RUN curl -Lo /tmp/seabolt.tar.gz https://github.com/neo4j-drivers/seabolt/releases/download/v1.7.4/seabolt-1.7.4-Linux-ubuntu-18.04.tar.gz
+RUN tar zxvf /tmp/seabolt.tar.gz --strip-components=1 -C /
+
+WORKDIR /go/src/github.com/Evertras/events-demo
+COPY . .
+
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+      go build -a -tags netgo \
+        --tags seabolt_static \
+        -o /processor \
+        ./cmd/processor/main.go
+
+FROM ubuntu:18.04
+
+RUN apt-get update
+RUN apt-get install -y openssl
+
+COPY --from=go-builder /processor /usr/bin/processor
+
+CMD ["/usr/bin/processor"]
+
