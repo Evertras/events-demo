@@ -86,7 +86,7 @@ func (a *auth) Register(ctx context.Context, email string, password string) (str
 	errs := make(chan error)
 
 	go func() {
-		err := a.db.WaitForCreateUser(ctx, email)
+		err := a.db.WaitForCreateUser(ctx, id)
 
 		if err != nil {
 			errs <- err

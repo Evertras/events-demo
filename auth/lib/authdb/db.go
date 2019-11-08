@@ -50,7 +50,7 @@ type Db interface {
 	// WaitForCreateUser will wait for the user to be created
 	// in the database before returning, or an error if the user
 	// was not seen as added before the context cancels
-	WaitForCreateUser(ctx context.Context, email string) error
+	WaitForCreateUser(ctx context.Context, id string) error
 }
 
 type db struct {
@@ -131,11 +131,11 @@ func (d *db) CreateUser(ctx context.Context, entry UserEntry) error {
 	return err
 }
 
-func (d *db) WaitForCreateUser(ctx context.Context, email string) error {
+func (d *db) WaitForCreateUser(ctx context.Context, id string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Wait for user creation")
 	defer span.Finish()
 
-	ps := d.db.PSubscribe("__keyspace@*__:creds:" + email)
+	ps := d.db.PSubscribe("__keyspace@*__:" + keyID(id))
 
 	defer ps.Close()
 

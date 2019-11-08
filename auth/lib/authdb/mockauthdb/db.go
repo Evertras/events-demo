@@ -77,7 +77,7 @@ func (db *MockDb) GetUserByID(ctx context.Context, id string) (*authdb.UserEntry
 	return nil, nil
 }
 
-func (db *MockDb) WaitForCreateUser(ctx context.Context, email string) error {
+func (db *MockDb) WaitForCreateUser(ctx context.Context, id string) error {
 	time.Sleep(db.CreateUserTimeout)
 
 	return nil
