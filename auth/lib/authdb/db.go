@@ -35,9 +35,13 @@ type Db interface {
 	// CreateUser creates a user in the database
 	CreateUser(ctx context.Context, entry UserEntry) error
 
-	// GetUserByEmail returns the user's entry or nil if not found.
+	// GetIDByEmail returns the user's ID or empty string if not found.
 	// Returns an error if something unexpected goes wrong.
-	GetUserByEmail(ctx context.Context, email string) (*UserEntry, error)
+	GetIDByEmail(ctx context.Context, email string) (string, error)
+
+	// GetUserByID returns the user's entry or nil if not found.
+	// Returns an error if something unexpected goes wrong.
+	GetUserByID(ctx context.Context, id string) (*UserEntry, error)
 
 	// GetSharedValue returns a stored value; if it does not exist,
 	// it will atomically store the given value and return that.
@@ -76,7 +80,7 @@ func (d *db) Connect(ctx context.Context) error {
 }
 
 func startSpan(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Redis Ping")
+	span, ctx := opentracing.StartSpanFromContext(ctx, operationName)
 
 	span.SetTag("db.type", "redis")
 	span.SetTag("span.kind", "client")
@@ -111,13 +115,24 @@ func (d *db) CreateUser(ctx context.Context, entry UserEntry) error {
 		return errors.Wrap(err, "failed to marshal to JSON")
 	}
 
-	err = d.db.Set(credsKey(entry.Email), val, 0).Err()
+	// TODO: Transactionify this
+	err = d.db.Set(keyEmail(entry.Email), entry.ID, 0).Err()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to write email key")
+	}
+
+	err = d.db.Set(keyID(entry.ID), val, 0).Err()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to write ID key")
+	}
 
 	return err
 }
 
 func (d *db) WaitForCreateUser(ctx context.Context, email string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Wait for user creation in Redis")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Wait for user creation")
 	defer span.Finish()
 
 	ps := d.db.PSubscribe("__keyspace@*__:creds:" + email)
@@ -139,13 +154,35 @@ func (d *db) WaitForCreateUser(ctx context.Context, email string) error {
 	}
 }
 
-func (d *db) GetUserByEmail(ctx context.Context, email string) (*UserEntry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Get user by email from Redis")
+func (d *db) GetIDByEmail(ctx context.Context, email string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Get ID by email")
+	defer span.Finish()
+
+	id, err := d.db.Get(keyEmail(email)).Result()
+
+	if err != nil {
+		if err == redis.Nil {
+			return "", nil
+		}
+
+		err = errors.Wrap(err, "failed to get key")
+
+		span.SetTag("error", true)
+		span.SetTag("error.object", err)
+
+		return "", err
+	}
+
+	return id, nil
+}
+
+func (d *db) GetUserByID(ctx context.Context, id string) (*UserEntry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Get user by ID")
 	defer span.Finish()
 
 	entry := &UserEntry{}
 
-	raw, err := d.db.Get(credsKey(email)).Result()
+	raw, err := d.db.Get(keyID(id)).Result()
 
 	if err != nil {
 		if err == redis.Nil {
@@ -174,12 +211,16 @@ func (d *db) GetUserByEmail(ctx context.Context, email string) (*UserEntry, erro
 	return entry, nil
 }
 
-func credsKey(email string) string {
-	return "creds:" + email
+func keyEmail(email string) string {
+	return "email:" + email
+}
+
+func keyID(email string) string {
+	return "id:" + email
 }
 
 func (d *db) GetSharedValue(ctx context.Context, key string, ifNotExist string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Get shared value in Redis")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Get shared value")
 	span.SetTag("auth.sharedvalue.key", key)
 	defer span.Finish()
 

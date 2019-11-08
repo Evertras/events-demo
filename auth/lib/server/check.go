@@ -33,7 +33,7 @@ func checkAuthHandler() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		w.Header().Set("X-User-ID", claim.Email)
+		w.Header().Set("X-User-ID", claim.UserID)
 
 		w.WriteHeader(200)
 	}

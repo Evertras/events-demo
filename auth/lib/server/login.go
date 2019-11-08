@@ -50,7 +50,16 @@ func loginHandler(auth auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		valid, err := auth.Validate(ctx, login.Email, login.Password)
+		id, err := auth.GetIDFromEmail(ctx, login.Email)
+
+		if err != nil {
+			w.WriteHeader(500)
+			log.Println("Failed to get ID:", err)
+			span.SetTag("error", true)
+			return
+		}
+
+		valid, err := auth.ValidateByID(ctx, id, login.Password)
 
 		if err != nil {
 			w.WriteHeader(500)
@@ -66,7 +75,7 @@ func loginHandler(auth auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		t, err := token.New(login.Email)
+		t, err := token.New(id)
 
 		if err != nil {
 			w.WriteHeader(500)

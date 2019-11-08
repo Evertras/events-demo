@@ -55,7 +55,7 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, err = a.Register(ctx, register.Email, register.Password)
+		id, err := a.Register(ctx, register.Email, register.Password)
 
 		if err != nil {
 			if err == auth.ErrUserAlreadyExists {
@@ -68,7 +68,7 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		valid, err := a.Validate(ctx, register.Email, register.Password)
+		valid, err := a.ValidateByID(ctx, id, register.Password)
 
 		if err != nil {
 			w.WriteHeader(500)

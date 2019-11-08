@@ -55,7 +55,7 @@ func TestRegistrationCreatesUserBasedOnRegistrationEvent(t *testing.T) {
 		t.Fatal("No users added at all")
 	}
 
-	user, err := db.GetUserByEmail(context.Background(), email)
+	user, err := db.GetUserByID(context.Background(), id)
 
 	if err != nil {
 		t.Fatal(err)

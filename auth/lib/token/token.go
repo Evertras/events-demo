@@ -12,15 +12,15 @@ var SignKey []byte
 const tokenDuration = time.Hour * 10
 
 type Claim struct {
-	Email string `json:"email"`
+	UserID string `json:"userId"`
 	jwt.StandardClaims
 }
 
-func New(email string) (string, error) {
+func New(userID string) (string, error) {
 	now := time.Now()
 
 	claims := Claim{
-		Email: email,
+		UserID: userID,
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt:  now.Unix(),
 			ExpiresAt: now.Add(tokenDuration).Unix(),

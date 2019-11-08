@@ -61,8 +61,16 @@ func (db *MockDb) CreateUser(ctx context.Context, entry authdb.UserEntry) error 
 	return nil
 }
 
-func (db *MockDb) GetUserByEmail(ctx context.Context, email string) (*authdb.UserEntry, error) {
+func (db *MockDb) GetIDByEmail(ctx context.Context, email string) (string, error) {
 	if entry, ok := db.EntriesByEmail[email]; ok {
+		return entry.ID, nil
+	}
+
+	return "", nil
+}
+
+func (db *MockDb) GetUserByID(ctx context.Context, id string) (*authdb.UserEntry, error) {
+	if entry, ok := db.EntriesByID[id]; ok {
 		return entry, nil
 	}
 
