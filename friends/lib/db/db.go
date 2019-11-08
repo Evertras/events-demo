@@ -2,9 +2,11 @@ package db
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
@@ -20,7 +22,7 @@ type Db interface {
 	GetSharedValue(ctx context.Context, key string, ifNotSet string) (string, error)
 
 	// CreatePlayer creates a player
-	CreatePlayer(ctx context.Context, userID string) error
+	CreatePlayer(ctx context.Context, userID string, email string) error
 
 	// SendInvite sends a new invitation to a target player
 	SendInvite(ctx context.Context, t time.Time, fromID string, toID string) error
@@ -109,10 +111,16 @@ func (d *db) Close() error {
 	return nil
 }
 
-func (d *db) CreatePlayer(ctx context.Context, userID string) error {
+func (d *db) CreatePlayer(ctx context.Context, userID string, email string) error {
+	span, ctx := startSpan(ctx, "Create Player")
+	defer span.Finish()
+
 	_, err := d.session.Run(
-		`MERGE (:Player { playerID: $userID })`,
-		map[string]interface{}{"userID": userID},
+		`MERGE (:Player { playerID: $userID, email: $email })`,
+		map[string]interface{}{
+			"userID": userID,
+			"email":  email,
+		},
 	)
 
 	if err != nil {
@@ -123,22 +131,21 @@ func (d *db) CreatePlayer(ctx context.Context, userID string) error {
 }
 
 func (d *db) SendInvite(ctx context.Context, t time.Time, fromID string, toID string) error {
-	_, err := d.session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
-		result, err := transaction.Run(
-			`
-MATCH (fromPlayer:Player {id: $fromID})
-MATCH (toPlayer:Player {id: $toID})
-MERGE (fromPlayer)-[:INVITED { unixSeconds: $unixSeconds }]->(toPlayer)
+	span, ctx := startSpan(ctx, "Record Invite")
+	defer span.Finish()
+
+	log.Println("From", fromID, "to", toID)
+
+	_, err := d.session.Run(
+		`
+MATCH (fromPlayer:Player { playerID: $fromID })
+MATCH (toPlayer:Player { playerID: $toID })
+MERGE (fromPlayer)-[i:INVITED]->(toPlayer)
+ON CREATE SET i.time = $time
+ON MATCH SET i.time = $time
 `,
-			map[string]interface{}{"fromID": fromID, "toID": toID, "unixSeconds": t.Unix()},
-		)
-
-		if err != nil {
-			return nil, err
-		}
-
-		return nil, result.Err()
-	})
+		map[string]interface{}{"fromID": fromID, "toID": toID, "time": t},
+	)
 
 	if err != nil {
 		return errors.Wrap(err, "failed to write to db")
@@ -149,4 +156,14 @@ MERGE (fromPlayer)-[:INVITED { unixSeconds: $unixSeconds }]->(toPlayer)
 
 func (d *db) GetPendingInvites(ctx context.Context, id string) ([]string, error) {
 	return nil, errors.New("not implemented")
+}
+
+func startSpan(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, operationName)
+
+	span.SetTag("db.type", "neo4j")
+	span.SetTag("span.kind", "client")
+	span.SetTag("component", "db")
+
+	return span, ctx
 }

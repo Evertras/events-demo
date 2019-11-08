@@ -108,7 +108,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: friends
+  name: friends-api
   annotations:
     kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/rule-type: PathPrefixStrip
@@ -122,7 +122,7 @@ spec:
       paths:
       - path: /api/friends
         backend:
-          serviceName: friends
+          serviceName: friends-api
           servicePort: http
 ---
 apiVersion: extensions/v1beta1

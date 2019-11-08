@@ -44,7 +44,7 @@ func NewUserRegistered() *UserRegistered {
 }
 
 func (r *UserRegistered) Schema() string {
-	return "{\"fields\":[{\"name\":\"ID\",\"type\":\"string\"},{\"name\":\"TimeUnixMs\",\"type\":\"long\"},{\"name\":\"Email\",\"type\":\"string\"},{\"name\":\"PasswordHash\",\"type\":\"string\"}],\"name\":\"UserRegistered\",\"namespace\":\"com.evertras.events-demo.events\",\"type\":\"record\",\"version\":\"1\"}"
+	return "{\"fields\":[{\"name\":\"ID\",\"type\":\"string\"},{\"logicalType\":\"timestamp-millis\",\"name\":\"TimeUnixMs\",\"type\":\"long\"},{\"name\":\"Email\",\"type\":\"string\"},{\"name\":\"PasswordHash\",\"type\":\"string\"}],\"name\":\"UserRegistered\",\"namespace\":\"com.evertras.events-demo.events\",\"type\":\"record\",\"version\":\"1\"}"
 }
 
 func (r *UserRegistered) SchemaName() string {

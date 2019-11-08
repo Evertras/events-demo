@@ -43,7 +43,7 @@ func NewInviteSent() *InviteSent {
 }
 
 func (r *InviteSent) Schema() string {
-	return "{\"fields\":[{\"name\":\"FromID\",\"type\":\"string\"},{\"name\":\"ToID\",\"type\":\"string\"},{\"name\":\"TimeUnixMs\",\"type\":\"long\"}],\"name\":\"InviteSent\",\"namespace\":\"com.evertras.events-demo.events\",\"type\":\"record\",\"version\":\"1\"}"
+	return "{\"fields\":[{\"name\":\"FromID\",\"type\":\"string\"},{\"name\":\"ToID\",\"type\":\"string\"},{\"logicalType\":\"timestamp-millis\",\"name\":\"TimeUnixMs\",\"type\":\"long\"}],\"name\":\"InviteSent\",\"namespace\":\"com.evertras.events-demo.events\",\"type\":\"record\",\"version\":\"1\"}"
 }
 
 func (r *InviteSent) SchemaName() string {

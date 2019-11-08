@@ -3,6 +3,7 @@ package eventprocessor
 import (
 	"bytes"
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -40,7 +41,26 @@ func (p *processor) RegisterHandlers(streamReader stream.Reader) error {
 				return errors.New("nil deserialized registration event")
 			}
 
-			err = p.db.CreatePlayer(ctx, ev.ID)
+			err = p.db.CreatePlayer(ctx, ev.ID, ev.Email)
+
+			return err
+		},
+	)
+
+	streamReader.RegisterHandler(
+		events.EventIDInviteSent,
+		func(ctx context.Context, data []byte) error {
+			ev, err := friendevents.DeserializeInviteSent(bytes.NewReader(data))
+
+			if err != nil {
+				return err
+			}
+
+			if ev == nil {
+				return errors.New("nil deserialized registration event")
+			}
+
+			err = p.db.SendInvite(ctx, time.Unix(ev.TimeUnixMs, 0), ev.FromID, ev.ToID)
 
 			return err
 		},

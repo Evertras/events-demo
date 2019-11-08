@@ -28,6 +28,22 @@ func genMockReceiveUserRegisterEvent(id string) mockstream.MockReceivedEvent {
 	}
 }
 
+func genMockInviteEvent(fromID string, toID string) mockstream.MockReceivedEvent {
+	ev := friendevents.NewInviteSent()
+
+	ev.FromID = fromID
+	ev.ToID = toID
+
+	var buf bytes.Buffer
+
+	ev.Serialize(&buf)
+
+	return mockstream.MockReceivedEvent{
+		ID:   events.EventIDInviteSent,
+		Data: buf.Bytes(),
+	}
+}
+
 func TestAddsRegisteredUsersToDb(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -49,5 +65,33 @@ func TestAddsRegisteredUsersToDb(t *testing.T) {
 
 	if !db.MockPlayerExists(id) {
 		t.Error("Did not find player in DB after registration event was sent")
+	}
+}
+
+func TestAddsInvitesToDb(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	db := mockdb.New()
+	p := New(db)
+
+	fromID := "somePlayer"
+	toID := "anotherPlayer"
+
+	db.CreatePlayer(ctx, fromID, "1")
+	db.CreatePlayer(ctx, toID, "2")
+
+	streamReader := mockstream.NewReader()
+
+	go streamReader.Listen(ctx)
+
+	p.RegisterHandlers(streamReader)
+
+	streamReader.Receive <- genMockInviteEvent(fromID, toID)
+
+	time.Sleep(time.Millisecond * 100)
+
+	if !db.MockInviteExists(fromID, toID) {
+		t.Error("Did not find invite in DB after invite event was sent")
 	}
 }

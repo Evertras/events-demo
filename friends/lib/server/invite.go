@@ -18,7 +18,7 @@ type InviteBody struct {
 
 func inviteHandler(streamWriter stream.Writer) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		span, _ := startSpan("invite", r)
+		span, ctx := startSpan("invite", r)
 		defer span.Finish()
 
 		if r.Method != "POST" {
@@ -53,6 +53,12 @@ func inviteHandler(streamWriter stream.Writer) func(w http.ResponseWriter, r *ht
 		ev.ToID = inviteBody.ToID
 		ev.TimeUnixMs = time.Now().Unix()
 
-		streamWriter.Write(r.Context(), []byte(from), events.EventIDInviteSent, ev)
+		err = streamWriter.Write(ctx, []byte(from), events.EventIDInviteSent, ev)
+
+		if err != nil {
+			w.WriteHeader(500)
+			log.Println("Failed to write to stream:", err)
+			return
+		}
 	}
 }

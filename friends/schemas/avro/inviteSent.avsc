@@ -6,6 +6,6 @@
   "fields": [
     { "name": "FromID", "type": "string" },
     { "name": "ToID", "type": "string" },
-    { "name": "TimeUnixMs", "type": "long" }
+    { "name": "TimeUnixMs", "type": "long", "logicalType": "timestamp-millis" }
   ]
 }

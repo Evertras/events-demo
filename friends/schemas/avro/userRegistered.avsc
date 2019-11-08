@@ -5,7 +5,7 @@
   "version": "1",
   "fields": [
     { "name": "ID", "type": "string" },
-    { "name": "TimeUnixMs", "type": "long" },
+    { "name": "TimeUnixMs", "type": "long", "logicalType": "timestamp-millis" },
     { "name": "Email", "type": "string" },
     { "name": "PasswordHash", "type": "string" }
   ]

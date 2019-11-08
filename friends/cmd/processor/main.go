@@ -88,7 +88,7 @@ func initTracing() error {
 		return errors.Wrap(err, "failed to create tracer config")
 	}
 
-	cfg.ServiceName = "friends"
+	cfg.ServiceName = "friends-processor"
 
 	tracer, _, err := cfg.NewTracer(
 		jaegerconfig.Logger(jaegerlog.StdLogger),

@@ -36,6 +36,9 @@ This will expose the Neo4j instance to localhost:7687.  Use this address
 to connect in the UI.  Note that auth has been disabled for simplicity,
 so do not enter a user or password.
 
+Traefik 2.0 seems to have TCP forwarding, but we're still on Traefik 1.x
+so until then we'll have to use this workaround for dev purposes.
+
 ## Actions
 
 The following actions can be done:
