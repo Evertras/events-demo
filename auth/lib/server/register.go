@@ -34,8 +34,8 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var login LoginBody
-		err = json.Unmarshal(body, &login)
+		var register RegisterBody
+		err = json.Unmarshal(body, &register)
 
 		if err != nil {
 			w.WriteHeader(400)
@@ -43,24 +43,24 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if login.Email == "" {
+		if register.Email == "" {
 			w.WriteHeader(400)
 			log.Println("Missing email address")
 			return
 		}
 
-		if login.Password == "" {
+		if register.Password == "" {
 			w.WriteHeader(400)
 			log.Println("Missing password")
 			return
 		}
 
-		_, err = a.Register(ctx, login.Email, login.Password)
+		_, err = a.Register(ctx, register.Email, register.Password)
 
 		if err != nil {
 			if err == auth.ErrUserAlreadyExists {
 				w.WriteHeader(400)
-				log.Println("User already exists:", login.Email)
+				log.Println("User already exists:", register.Email)
 				return
 			}
 			w.WriteHeader(500)
@@ -68,7 +68,7 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		valid, err := a.Validate(ctx, login.Email, login.Password)
+		valid, err := a.Validate(ctx, register.Email, register.Password)
 
 		if err != nil {
 			w.WriteHeader(500)
@@ -78,11 +78,11 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 
 		if !valid {
 			w.WriteHeader(400)
-			log.Println("Failed to validate credentials for", login.Email)
+			log.Println("Failed to validate credentials for", register.Email)
 			return
 		}
 
-		t, err := token.New(login.Email)
+		t, err := token.New(register.Email)
 
 		if err != nil {
 			w.WriteHeader(500)

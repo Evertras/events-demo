@@ -1,7 +1,19 @@
 version: '2'
 
 tasks:
+  avro:
+    sources:
+      - schemas/avro/*.avsc
+    generates:
+      - lib/events/friendevents/*.go
+    cmds:
+      - mkdir -p lib/events/friendevents/
+      - gogen-avro --package friendevents lib/events/friendevents/ ./schemas/avro/*.avsc
+
   dev:
+    deps:
+      - avro
+      - copy-shared
     cmds:
       - docker build -f Dockerfile.dev -t events-demo-friends-dev .
       - telepresence --docker-run --rm -it -e JAEGER_AGENT_HOST=jaeger -e JAEGER_SAMPLER_TYPE=const -e JAEGER_SAMPLER_PARAM=1 -v ${PWD}:/go/src/github.com/Evertras/events-demo events-demo-friends-dev /bin/bash
@@ -11,6 +23,9 @@ tasks:
       - kubectl port-forward --address localhost service/friends-db 7687:7687
 
   build:
+    deps:
+      - avro
+      - copy-shared
     cmds:
       - docker build -t evertras/events-demo-friends .
 
@@ -23,4 +38,21 @@ tasks:
   delete-local:
     cmds:
       - kubectl delete -f deploy/all.yaml
+
+  test:
+    deps:
+      - avro
+      - copy-shared
+    cmds:
+      - go test -v -race ./...
+
+  # NOTE: This is a hack needed because we're trying to cram everything
+  # into a single repo and Docker contexts get weird.  This is not a good thing.
+  copy-shared:
+    sources:
+      - ../shared/**/*
+    generates:
+      - ./lib/shared/**/*
+    cmds:
+      - cp -R ../shared/ ./lib/shared/
 

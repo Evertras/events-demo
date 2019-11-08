@@ -7,6 +7,8 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+
+	"github.com/Evertras/events-demo/shared/stream"
 )
 
 type Server interface {
@@ -15,12 +17,13 @@ type Server interface {
 
 type server struct {
 	httpServer *http.Server
+	streamWriter stream.Writer
 }
 
-func New(addr string) Server {
+func New(addr string, streamWriter stream.Writer) Server {
 	router := http.NewServeMux()
 
-	router.HandleFunc("/invite", inviteHandler())
+	router.HandleFunc("/invite", inviteHandler(streamWriter))
 
 	s := &server{
 		httpServer: &http.Server{
@@ -29,6 +32,7 @@ func New(addr string) Server {
 			ReadTimeout:  time.Second * 5,
 			Handler:      router,
 		},
+		streamWriter: streamWriter,
 	}
 
 	return s

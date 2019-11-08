@@ -47,12 +47,16 @@ is not added yet; the other player must accept first.
 
 Requires the user ID of the other player.
 
+### Get Pending Invites
+
+A player can get all pending invites from other players.
+
 ### Accept
 
 A player can accept a pending invitation from another player.  Once
 the invitation is accepted, the two players are considered friends.
 
-### Get
+### Get Friend List
 
 A player should be able to get their friend list at any time.
 

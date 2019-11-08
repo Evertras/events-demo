@@ -10,7 +10,10 @@ import (
 	"github.com/uber/jaeger-lib/metrics"
 
 	"github.com/Evertras/events-demo/friends/lib/server"
+	"github.com/Evertras/events-demo/shared/stream"
 )
+
+const kafkaBrokers = "kafka-cp-kafka-headless:9092"
 
 func main() {
 	addr := "0.0.0.0:13030"
@@ -19,7 +22,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server := server.New(addr)
+	streamWriter := stream.NewKafkaStreamWriter("user", []string{kafkaBrokers})
+
+	server := server.New(addr, streamWriter)
 
 	log.Println("Serving", addr)
 
@@ -33,7 +38,7 @@ func initTracing() error {
 		return errors.Wrap(err, "failed to create tracer config")
 	}
 
-	cfg.ServiceName = "sample"
+	cfg.ServiceName = "friends"
 
 	tracer, _, err := cfg.NewTracer(
 		jaegerconfig.Logger(jaegerlog.StdLogger),

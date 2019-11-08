@@ -15,8 +15,6 @@ import (
 	"github.com/Evertras/events-demo/shared/stream"
 )
 
-const headerAuthToken = "X-Auth-Token"
-const headerUserID = "X-User-ID"
 const addr = "0.0.0.0:13041"
 
 const kafkaBrokers = "kafka-cp-kafka-headless:9092"

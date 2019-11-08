@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "UserRegistered",
+  "namespace": "com.evertras.events-demo.events",
+  "version": "1",
+  "fields": [
+    { "name": "ID", "type": "string" },
+    { "name": "TimeUnixMs", "type": "long" },
+    { "name": "Email", "type": "string" },
+    { "name": "PasswordHash", "type": "string" }
+  ]
+}

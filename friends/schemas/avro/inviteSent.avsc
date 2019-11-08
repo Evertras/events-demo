@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "InviteSent",
+  "namespace": "com.evertras.events-demo.events",
+  "version": "1",
+  "fields": [
+    { "name": "FromID", "type": "string" },
+    { "name": "ToID", "type": "string" },
+    { "name": "TimeUnixMs", "type": "long" }
+  ]
+}
