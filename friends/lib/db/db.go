@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/neo4j"
@@ -24,8 +23,11 @@ type Db interface {
 	// CreatePlayer creates a player
 	CreatePlayer(ctx context.Context, userID string, email string) error
 
-	// SendInvite sends a new invitation to a target player
-	SendInvite(ctx context.Context, t time.Time, fromID string, toID string) error
+	// SendInviteByID sends a new invitation to a target player by target's ID
+	SendInviteByID(ctx context.Context, t time.Time, fromID string, toID string) error
+
+	// SendInviteByEmail sends a new invitation to a target player by target's email
+	SendInviteByEmail(ctx context.Context, t time.Time, fromID string, toEmail string) error
 
 	// GetPendingInvites gets all pending invites for a player, returning
 	// the user IDs that the invites were sent from
@@ -130,13 +132,14 @@ func (d *db) CreatePlayer(ctx context.Context, userID string, email string) erro
 	return nil
 }
 
-func (d *db) SendInvite(ctx context.Context, t time.Time, fromID string, toID string) error {
-	span, ctx := startSpan(ctx, "Record Invite")
+func (d *db) SendInviteByID(ctx context.Context, t time.Time, fromID string, toID string) error {
+	span, ctx := startSpan(ctx, "Record Invite By ID")
 	defer span.Finish()
 
-	log.Println("From", fromID, "to", toID)
+	span.SetTag("from", fromID)
+	span.SetTag("target", toID)
 
-	_, err := d.session.Run(
+	result, err := d.session.Run(
 		`
 MATCH (fromPlayer:Player { playerID: $fromID })
 MATCH (toPlayer:Player { playerID: $toID })
@@ -149,6 +152,51 @@ ON MATCH SET i.time = $time
 
 	if err != nil {
 		return errors.Wrap(err, "failed to write to db")
+	}
+
+	summary, err := result.Summary()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to get result summary")
+	}
+
+	if summary.Counters().RelationshipsCreated() != 1 {
+		return errors.New("did not create relationship")
+	}
+
+	return nil
+}
+
+func (d *db) SendInviteByEmail(ctx context.Context, t time.Time, fromID string, toEmail string) error {
+	span, ctx := startSpan(ctx, "Record Invite By Email")
+	defer span.Finish()
+
+	span.SetTag("from", fromID)
+	span.SetTag("target", toEmail)
+
+	result, err := d.session.Run(
+		`
+MATCH (fromPlayer:Player { playerID: $fromID })
+MATCH (toPlayer:Player { email: $toEmail })
+MERGE (fromPlayer)-[i:INVITED]->(toPlayer)
+ON CREATE SET i.time = $time
+ON MATCH SET i.time = $time
+`,
+		map[string]interface{}{"fromID": fromID, "toEmail": toEmail, "time": t},
+	)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to write to db")
+	}
+
+	summary, err := result.Summary()
+
+	if err != nil {
+		return errors.Wrap(err, "failed to get result summary")
+	}
+
+	if summary.Counters().RelationshipsCreated() != 1 {
+		return errors.New("did not create relationship")
 	}
 
 	return nil

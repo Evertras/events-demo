@@ -82,7 +82,7 @@ func registerHandler(a auth.Auth) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		t, err := token.New(register.Email)
+		t, err := token.New(id)
 
 		if err != nil {
 			w.WriteHeader(500)

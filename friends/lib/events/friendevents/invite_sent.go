@@ -19,6 +19,7 @@ type InviteSent struct {
 	FromID     string
 	ToID       string
 	TimeUnixMs int64
+	ToEmail    string
 }
 
 func NewInviteSentWriter(writer io.Writer, codec container.Codec, recordsPerBlock int64) (*container.Writer, error) {
@@ -43,7 +44,7 @@ func NewInviteSent() *InviteSent {
 }
 
 func (r *InviteSent) Schema() string {
-	return "{\"fields\":[{\"name\":\"FromID\",\"type\":\"string\"},{\"name\":\"ToID\",\"type\":\"string\"},{\"logicalType\":\"timestamp-millis\",\"name\":\"TimeUnixMs\",\"type\":\"long\"}],\"name\":\"InviteSent\",\"namespace\":\"com.evertras.events-demo.events\",\"type\":\"record\",\"version\":\"1\"}"
+	return "{\"fields\":[{\"name\":\"FromID\",\"type\":\"string\"},{\"name\":\"ToID\",\"type\":\"string\"},{\"logicalType\":\"timestamp-millis\",\"name\":\"TimeUnixMs\",\"type\":\"long\"},{\"name\":\"ToEmail\",\"type\":\"string\"}],\"name\":\"InviteSent\",\"namespace\":\"com.evertras.events-demo.events\",\"type\":\"record\",\"version\":\"1\"}"
 }
 
 func (r *InviteSent) SchemaName() string {
@@ -70,6 +71,8 @@ func (r *InviteSent) Get(i int) types.Field {
 		return (*types.String)(&r.ToID)
 	case 2:
 		return (*types.Long)(&r.TimeUnixMs)
+	case 3:
+		return (*types.String)(&r.ToEmail)
 
 	}
 	panic("Unknown field index")

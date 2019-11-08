@@ -13,7 +13,8 @@ import (
 )
 
 type InviteBody struct {
-	ToID string `json:"toID"`
+	ToID string `json:"id"`
+	ToEmail string `json:"email"`
 }
 
 func inviteHandler(streamWriter stream.Writer) func(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +52,7 @@ func inviteHandler(streamWriter stream.Writer) func(w http.ResponseWriter, r *ht
 
 		ev.FromID = from
 		ev.ToID = inviteBody.ToID
+		ev.ToEmail = inviteBody.ToEmail
 		ev.TimeUnixMs = time.Now().Unix()
 
 		err = streamWriter.Write(ctx, []byte(from), events.EventIDInviteSent, ev)

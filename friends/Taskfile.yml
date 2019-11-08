@@ -7,8 +7,8 @@ tasks:
     generates:
       - lib/events/friendevents/*.go
     cmds:
+      - rm -rf lib/events/friendevents/
       - mkdir -p lib/events/friendevents/
-      - rm lib/events/friendevents/*
       - gogen-avro --package friendevents lib/events/friendevents/ ./schemas/avro/*.avsc
 
   dev:

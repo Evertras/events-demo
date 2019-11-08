@@ -91,6 +91,10 @@ func writeInviteSent(r *InviteSent, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+	err = writeString(r.ToEmail, w)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -28,11 +28,12 @@ func genMockReceiveUserRegisterEvent(id string) mockstream.MockReceivedEvent {
 	}
 }
 
-func genMockInviteEvent(fromID string, toID string) mockstream.MockReceivedEvent {
+func genMockInviteEvent(fromID string, toID string, toEmail string) mockstream.MockReceivedEvent {
 	ev := friendevents.NewInviteSent()
 
 	ev.FromID = fromID
 	ev.ToID = toID
+	ev.ToEmail = toEmail
 
 	var buf bytes.Buffer
 
@@ -69,29 +70,51 @@ func TestAddsRegisteredUsersToDb(t *testing.T) {
 }
 
 func TestAddsInvitesToDb(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	sourceID := "sourceid"
+	targetID := "anotherPlayer"
+	targetEmail := "another@somewhere.com"
 
-	db := mockdb.New()
-	p := New(db)
+	cases := []struct {
+		name    string
+		toID    string
+		toEmail string
+	}{
+		{
+			name:    "ID",
+			toID:    targetID,
+			toEmail: "",
+		},
+		{
+			name:    "Email",
+			toID:    "",
+			toEmail: targetEmail,
+		},
+	}
 
-	fromID := "somePlayer"
-	toID := "anotherPlayer"
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
-	db.CreatePlayer(ctx, fromID, "1")
-	db.CreatePlayer(ctx, toID, "2")
+			db := mockdb.New()
+			p := New(db)
 
-	streamReader := mockstream.NewReader()
+			db.CreatePlayer(ctx, sourceID, "doesnt@matter.com")
+			db.CreatePlayer(ctx, targetID, targetEmail)
 
-	go streamReader.Listen(ctx)
+			streamReader := mockstream.NewReader()
 
-	p.RegisterHandlers(streamReader)
+			go streamReader.Listen(ctx)
 
-	streamReader.Receive <- genMockInviteEvent(fromID, toID)
+			p.RegisterHandlers(streamReader)
 
-	time.Sleep(time.Millisecond * 100)
+			streamReader.Receive <- genMockInviteEvent(sourceID, c.toID, c.toEmail)
 
-	if !db.MockInviteExists(fromID, toID) {
-		t.Error("Did not find invite in DB after invite event was sent")
+			time.Sleep(time.Millisecond * 100)
+
+			if !db.MockInviteExists(sourceID, targetID, targetEmail) {
+				t.Error("Did not find invite in DB after invite event was sent")
+			}
+		})
 	}
 }

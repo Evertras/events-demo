@@ -53,14 +53,20 @@ func (p *processor) RegisterHandlers(streamReader stream.Reader) error {
 			ev, err := friendevents.DeserializeInviteSent(bytes.NewReader(data))
 
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to deserialize invite message")
 			}
 
 			if ev == nil {
-				return errors.New("nil deserialized registration event")
+				return errors.New("nil deserialized invite sent event")
 			}
 
-			err = p.db.SendInvite(ctx, time.Unix(ev.TimeUnixMs, 0), ev.FromID, ev.ToID)
+			if len(ev.ToID) > 0 {
+				err = p.db.SendInviteByID(ctx, time.Unix(ev.TimeUnixMs, 0), ev.FromID, ev.ToID)
+			} else if len(ev.ToEmail) > 0 {
+				err = p.db.SendInviteByEmail(ctx, time.Unix(ev.TimeUnixMs, 0), ev.FromID, ev.ToEmail)
+			} else {
+				return errors.New("must supply either ID or email for invitation")
+			}
 
 			return err
 		},
