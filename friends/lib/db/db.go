@@ -26,8 +26,8 @@ type Db interface {
 	// SendInviteByID sends a new invitation to a target player by target's ID
 	SendInviteByID(ctx context.Context, t time.Time, fromID string, toID string) error
 
-	// SendInviteByEmail sends a new invitation to a target player by target's email
-	SendInviteByEmail(ctx context.Context, t time.Time, fromID string, toEmail string) error
+	// GetIDFromEmail returns the player's ID from a given email
+	GetIDFromEmail(ctx context.Context, email string) (string, error)
 
 	// GetPendingInvites gets all pending invites for a player, returning
 	// the user IDs that the invites were sent from
@@ -167,39 +167,35 @@ ON MATCH SET i.time = $time
 	return nil
 }
 
-func (d *db) SendInviteByEmail(ctx context.Context, t time.Time, fromID string, toEmail string) error {
-	span, ctx := startSpan(ctx, "Record Invite By Email")
+func (d *db) GetIDFromEmail(ctx context.Context, email string) (string, error) {
+	span, ctx := startSpan(ctx, "Get ID from Email")
 	defer span.Finish()
 
-	span.SetTag("from", fromID)
-	span.SetTag("target", toEmail)
+	span.SetTag("email", email)
 
 	result, err := d.session.Run(
 		`
-MATCH (fromPlayer:Player { playerID: $fromID })
-MATCH (toPlayer:Player { email: $toEmail })
-MERGE (fromPlayer)-[i:INVITED]->(toPlayer)
-ON CREATE SET i.time = $time
-ON MATCH SET i.time = $time
+MATCH (p:Player { email: $email })
+RETURN p.playerID
 `,
-		map[string]interface{}{"fromID": fromID, "toEmail": toEmail, "time": t},
+		map[string]interface{}{"email": email},
 	)
 
 	if err != nil {
-		return errors.Wrap(err, "failed to write to db")
+		return "", errors.Wrap(err, "failed to read from db")
 	}
 
-	summary, err := result.Summary()
-
-	if err != nil {
-		return errors.Wrap(err, "failed to get result summary")
+	if !result.Next() {
+		return "", errors.New("no records returned")
 	}
 
-	if summary.Counters().RelationshipsCreated() != 1 {
-		return errors.New("did not create relationship")
+	id, found := result.Record().Get("p.playerID")
+
+	if !found {
+		return "", errors.New("failed to get playerID field")
 	}
 
-	return nil
+	return id.(string), nil
 }
 
 func (d *db) GetPendingInvites(ctx context.Context, id string) ([]string, error) {

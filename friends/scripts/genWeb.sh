@@ -1,5 +1,8 @@
 #!/bin/bash
 
+NUM_USERS=500
+NUM_INVITES=$(( NUM_USERS * 2 ))
+
 # Parallel data hype
 EMAIL_LIST=()
 PASSWORD_LIST=()
@@ -34,7 +37,7 @@ invite() {
   local RESPONSE=$(curl -s -H "Host:events-demo.localhost" -H "X-Auth-Token: ${TOKEN}" -d "${BODY}" localhost/api/friends/invite)
 }
 
-for (( i=0; i < 15; i++ ))
+for (( i=0; i < NUM_USERS; i++ ))
 do
   EMAIL=$(uuidgen)@genweb.com
   PASSWORD=$(uuidgen)
@@ -46,7 +49,7 @@ do
   echo "Registered ${EMAIL}"
 done
 
-for (( i=0; i < 20; i++ ))
+for (( i=0; i < NUM_INVITES; i++ ))
 do
   FROM_INDEX=$((RANDOM % ${#EMAIL_LIST[@]}))
   TO_INDEX=$((RANDOM % ${#EMAIL_LIST[@]}))

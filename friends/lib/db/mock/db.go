@@ -4,19 +4,23 @@ import (
 	"context"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type Db struct {
 	m sync.Mutex
 
 	invitesByID map[string][]string
-	invitesByEmail map[string][]string
+	idFromEmail map[string]string
+	emailFromID map[string]string
 }
 
 func New() *Db {
 	return &Db{
 		invitesByID: make(map[string][]string),
-		invitesByEmail: make(map[string][]string),
+		idFromEmail: make(map[string]string),
+		emailFromID: make(map[string]string),
 	}
 }
 
@@ -40,33 +44,35 @@ func (d *Db) CreatePlayer(ctx context.Context, userID string, email string) erro
 		d.invitesByID[userID] = make([]string, 0)
 	}
 
+	d.idFromEmail[email] = userID
+
 	return nil
 }
 
 func (d *Db) SendInviteByID(ctx context.Context, t time.Time, fromID string, toID string) error {
-	// Cheat a little here for the sake of simplicity, just ensure they exist
-	d.CreatePlayer(ctx, fromID, "f")
-	d.CreatePlayer(ctx, toID, "f")
-
 	d.m.Lock()
 	defer d.m.Unlock()
+
+	if _, exists := d.invitesByID[toID]; !exists {
+		d.invitesByID[toID] = make([]string, 0)
+	}
 
 	d.invitesByID[toID] = append(d.invitesByID[toID], fromID)
 
 	return nil
 }
 
-func (d *Db) SendInviteByEmail(ctx context.Context, t time.Time, fromID string, toEmail string) error {
-	// Cheat a little here for the sake of simplicity, just ensure they exist
-	d.CreatePlayer(ctx, fromID, "f")
-	d.CreatePlayer(ctx, "asdf", toEmail)
-
+func (d *Db) GetIDFromEmail(ctx context.Context, email string) (string, error) {
 	d.m.Lock()
 	defer d.m.Unlock()
 
-	d.invitesByEmail[toEmail] = append(d.invitesByEmail[toEmail], fromID)
+	id, exists := d.idFromEmail[email]
 
-	return nil
+	if !exists {
+		return "", errors.New("does not exist")
+	}
+
+	return id, nil
 }
 
 func (d *Db) GetPendingInvites(ctx context.Context, id string) ([]string, error) {
@@ -96,20 +102,16 @@ func (d *Db) MockInviteExists(fromID string, toID string, toEmail string) bool {
 	d.m.Lock()
 	defer d.m.Unlock()
 
-	invitesByID, exists := d.invitesByID[toID]
+	id := toID
+
+	if len(toID) == 0 {
+		id = d.idFromEmail[toEmail]
+	}
+
+	invitesByID, exists := d.invitesByID[id]
 
 	if exists {
 		for _, i := range invitesByID {
-			if i == fromID {
-				return true
-			}
-		}
-	}
-
-	invitesByEmail, exists := d.invitesByEmail[toEmail]
-
-	if exists {
-		for _, i := range invitesByEmail {
 			if i == fromID {
 				return true
 			}

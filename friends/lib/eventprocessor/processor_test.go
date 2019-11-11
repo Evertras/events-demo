@@ -3,6 +3,8 @@ package eventprocessor
 import (
 	"bytes"
 	"context"
+	"log"
+	"os"
 	"testing"
 	"time"
 
@@ -54,7 +56,7 @@ func TestAddsRegisteredUsersToDb(t *testing.T) {
 
 	id := "someplayer"
 
-	streamReader := mockstream.NewReader()
+	streamReader := mockstream.NewReader(mockstream.MockStreamReaderOpts{})
 
 	go streamReader.Listen(ctx)
 
@@ -71,23 +73,33 @@ func TestAddsRegisteredUsersToDb(t *testing.T) {
 
 func TestAddsInvitesToDb(t *testing.T) {
 	sourceID := "sourceid"
-	targetID := "anotherPlayer"
+	sourceEmail := "source@me.com"
+	targetID := "anotherPlayerId"
 	targetEmail := "another@somewhere.com"
 
 	cases := []struct {
-		name    string
-		toID    string
-		toEmail string
+		name      string
+		toID      string
+		toEmail   string
+		shouldAdd bool
 	}{
 		{
-			name:    "ID",
-			toID:    targetID,
-			toEmail: "",
+			name:      "ID",
+			toID:      targetID,
+			toEmail:   "",
+			shouldAdd: true,
 		},
 		{
-			name:    "Email",
-			toID:    "",
-			toEmail: targetEmail,
+			name:      "Email",
+			toID:      "",
+			toEmail:   targetEmail,
+			shouldAdd: true,
+		},
+		{
+			name:      "Self-targeted",
+			toID:      "",
+			toEmail:   sourceEmail,
+			shouldAdd: false,
 		},
 	}
 
@@ -99,10 +111,12 @@ func TestAddsInvitesToDb(t *testing.T) {
 			db := mockdb.New()
 			p := New(db)
 
-			db.CreatePlayer(ctx, sourceID, "doesnt@matter.com")
+			db.CreatePlayer(ctx, sourceID, sourceEmail)
 			db.CreatePlayer(ctx, targetID, targetEmail)
 
-			streamReader := mockstream.NewReader()
+			streamReader := mockstream.NewReader(mockstream.MockStreamReaderOpts{
+				Logger: log.New(os.Stdout, c.name + " - ", 0),
+			})
 
 			go streamReader.Listen(ctx)
 
@@ -112,8 +126,12 @@ func TestAddsInvitesToDb(t *testing.T) {
 
 			time.Sleep(time.Millisecond * 100)
 
-			if !db.MockInviteExists(sourceID, targetID, targetEmail) {
-				t.Error("Did not find invite in DB after invite event was sent")
+			if db.MockInviteExists(sourceID, c.toID, c.toEmail) != c.shouldAdd {
+				if c.shouldAdd {
+					t.Error("Expected to find invite in DB but did not")
+				} else {
+					t.Error("Did not expect to find invite in DB but did")
+				}
 			}
 		})
 	}
