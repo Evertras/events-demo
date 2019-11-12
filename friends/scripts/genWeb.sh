@@ -1,7 +1,7 @@
 #!/bin/bash
 
-NUM_USERS=500
-NUM_INVITES=$(( NUM_USERS * 2 ))
+NUM_USERS=50
+NUM_INVITES=$(( NUM_USERS * 4 ))
 
 # Parallel data hype
 EMAIL_LIST=()

@@ -15,38 +15,6 @@ import (
 	mockstream "github.com/Evertras/events-demo/shared/stream/mock"
 )
 
-func genMockReceiveUserRegisterEvent(id string) mockstream.MockReceivedEvent {
-	ev := friendevents.NewUserRegistered()
-
-	ev.ID = id
-
-	var buf bytes.Buffer
-
-	ev.Serialize(&buf)
-
-	return mockstream.MockReceivedEvent{
-		ID:   events.EventIDUserRegistered,
-		Data: buf.Bytes(),
-	}
-}
-
-func genMockInviteEvent(fromID string, toID string, toEmail string) mockstream.MockReceivedEvent {
-	ev := friendevents.NewInviteSent()
-
-	ev.FromID = fromID
-	ev.ToID = toID
-	ev.ToEmail = toEmail
-
-	var buf bytes.Buffer
-
-	ev.Serialize(&buf)
-
-	return mockstream.MockReceivedEvent{
-		ID:   events.EventIDInviteSent,
-		Data: buf.Bytes(),
-	}
-}
-
 func TestAddsRegisteredUsersToDb(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -115,7 +83,7 @@ func TestAddsInvitesToDb(t *testing.T) {
 			db.CreatePlayer(ctx, targetID, targetEmail)
 
 			streamReader := mockstream.NewReader(mockstream.MockStreamReaderOpts{
-				Logger: log.New(os.Stdout, c.name + " - ", 0),
+				Logger: log.New(os.Stdout, "SendInvite-" + c.name + " - ", 0),
 			})
 
 			go streamReader.Listen(ctx)
@@ -134,5 +102,37 @@ func TestAddsInvitesToDb(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func genMockReceiveUserRegisterEvent(id string) mockstream.MockReceivedEvent {
+	ev := friendevents.NewUserRegistered()
+
+	ev.ID = id
+
+	var buf bytes.Buffer
+
+	ev.Serialize(&buf)
+
+	return mockstream.MockReceivedEvent{
+		ID:   events.EventIDUserRegistered,
+		Data: buf.Bytes(),
+	}
+}
+
+func genMockInviteEvent(fromID string, toID string, toEmail string) mockstream.MockReceivedEvent {
+	ev := friendevents.NewInviteSent()
+
+	ev.FromID = fromID
+	ev.ToID = toID
+	ev.ToEmail = toEmail
+
+	var buf bytes.Buffer
+
+	ev.Serialize(&buf)
+
+	return mockstream.MockReceivedEvent{
+		ID:   events.EventIDInviteSent,
+		Data: buf.Bytes(),
 	}
 }
