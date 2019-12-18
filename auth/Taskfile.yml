@@ -62,6 +62,14 @@ tasks:
       - docker build -f Dockerfile.server -t evertras/events-demo-auth-api .
       - docker build -f Dockerfile.processor -t evertras/events-demo-auth-processor .
 
+  build-devmode:
+    deps:
+      - avro
+      - copy-shared
+    cmds:
+      - docker build --build-arg BUILD_TAGS=devmode -f Dockerfile.server -t evertras/events-demo-auth-api-devmode .
+      - docker build --build-arg BUILD_TAGS=devmode -f Dockerfile.processor -t evertras/events-demo-auth-processor-devmode .
+
   build-redis:
     dir: deploy/redis
     cmds:
